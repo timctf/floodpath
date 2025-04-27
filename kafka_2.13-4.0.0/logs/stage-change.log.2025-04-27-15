@@ -1,5 +1,0 @@
-[2025-04-27 15:06:28,978] INFO [Broker id=1] Transitioning 2 partition(s) to local leaders. (state.change.logger)
-[2025-04-27 15:06:29,003] INFO [Broker id=1] Creating new partition rainfall-0 with topic id WX6oHORSQcSZUReKw3t0sw. (state.change.logger)
-[2025-04-27 15:06:29,047] INFO [Broker id=1] Leader rainfall-0 with topic id Some(WX6oHORSQcSZUReKw3t0sw) starts at leader epoch 0 from offset 0 with partition epoch 0, high watermark 0, ISR [1], adding replicas [] and removing replicas [] . Previous leader None and previous leader epoch was -1. (state.change.logger)
-[2025-04-27 15:06:29,053] INFO [Broker id=1] Creating new partition adhoc-0 with topic id yTK9IWz3TquTKTsvm0gt0g. (state.change.logger)
-[2025-04-27 15:06:29,064] INFO [Broker id=1] Leader adhoc-0 with topic id Some(yTK9IWz3TquTKTsvm0gt0g) starts at leader epoch 0 from offset 0 with partition epoch 0, high watermark 0, ISR [1], adding replicas [] and removing replicas [] . Previous leader None and previous leader epoch was -1. (state.change.logger)
