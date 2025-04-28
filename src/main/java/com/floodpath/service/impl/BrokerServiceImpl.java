@@ -16,17 +16,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class BrokerServiceImpl implements BrokerService {
 
     private final KafkaTemplate<String, String> adhocKafkaTemplate;
-    private final KafkaTemplate<String, Object> rainfallKafkaTemplate;
+    private final KafkaTemplate<String, Object> dataKafkaTemplate;
 
     @Override
-    public void sendDataToBroker(String data) {
-        log.info("Adhoc data received, proceeding to send to broker - {}", data);
-        adhocKafkaTemplate.send(AppConstants.ADHOC_TOPIC_NAME, data);
-    };
-
-    @Override
-    public void sendDataToBroker(RainfallTopicDTO data) {
-        log.info("Rainfall data from Data.Gov (NEA) processed, proceeding to send to broker - {}", data.toString());
-        rainfallKafkaTemplate.send(AppConstants.RAINFALL_TOPIC_NAME, data);
+    public void sendDataToBroker(Object data) {
+        if (data instanceof String) {
+            log.info("Adhoc data received, proceeding to send to broker - {}", data);
+            adhocKafkaTemplate.send(AppConstants.ADHOC_TOPIC_NAME, (String) data);
+        } else if (data instanceof RainfallTopicDTO) {
+            log.info("Rainfall data from Data.Gov (NEA) processed, proceeding to send to broker - {}", data.toString());
+            dataKafkaTemplate.send(AppConstants.RAINFALL_TOPIC_NAME, data);
+        } else {
+            log.info("No valid combination to send to broker: {}", data);
+        }
     };
 }

@@ -1,5 +1,6 @@
 package com.floodpath;
 
+import com.floodpath.service.CommonService;
 import com.floodpath.service.RainfallService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -14,9 +15,9 @@ public class FloodPathKafkaApplication {
 	}
 
 	@Bean
-	CommandLineRunner commandLineRunner(RainfallService rainfallService) {
+	CommandLineRunner commandLineRunner(CommonService commonService) {
 		return args -> {
-			rainfallService.pollRainfallData();
+			commonService.pollDataSources();
 		};
 	}
 }

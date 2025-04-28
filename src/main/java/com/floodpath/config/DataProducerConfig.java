@@ -1,6 +1,5 @@
 package com.floodpath.config;
 
-import com.floodpath.dto.RainfallTopicDTO;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class RainfallProducerConfig {
+public class DataProducerConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
@@ -29,12 +28,12 @@ public class RainfallProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, Object> rainfallProducerFactory() {
+    public ProducerFactory<String, Object> dataProducerFactory() {
         return new DefaultKafkaProducerFactory<>(producerConfig());
     }
 
     @Bean
-    public KafkaTemplate<String, Object> rainfallKafkaTemplate(ProducerFactory<String, Object> producerFactory) {
+    public KafkaTemplate<String, Object> dataKafkaTemplate(ProducerFactory<String, Object> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 }

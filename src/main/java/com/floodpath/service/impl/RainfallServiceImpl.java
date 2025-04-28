@@ -36,34 +36,24 @@ public class RainfallServiceImpl implements RainfallService {
     @Value("${floodpath.nea.rainfall.api.url}")
     private String NEA_RAINFALL_API_URL;
 
-    @Value("${floodpath.nea.rainfall.api.interval}")
-    private Long NEA_RAINFALL_API_INTERVAL;
-
     @Override
-    public void pollRainfallData() {
-        RestTemplate restTemplate = new RestTemplate();
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                ResponseEntity<RainfallDataResDTO> response = null;
-                try {
-                    response = restTemplate.getForEntity(
-                            NEA_RAINFALL_API_URL,
-                            RainfallDataResDTO.class
-                    );
-                } catch (HttpClientErrorException e) {
-                    log.error("Exception: {}", e.getMessage());
-                }
+    public void getRainfallData(RestTemplate restTemplate) {
+        ResponseEntity<RainfallDataResDTO> response = null;
+        try {
+            response = restTemplate.getForEntity(
+                    NEA_RAINFALL_API_URL,
+                    RainfallDataResDTO.class
+            );
+        } catch (HttpClientErrorException e) {
+            log.error("Exception: {}", e.getMessage());
+        }
 
-                if (response != null && response.getStatusCode().is2xxSuccessful()) {
-                    log.info("Response from Data.Gov (NEA): {} ", response.getBody());
-                    ingestRainfallData(response.getBody());
-                } else {
-                    log.error("Failed to retrieve rainfall data from Data.Gov (NEA) on {}", LocalDateTime.now());
-                }
-            }
-        }, 0, NEA_RAINFALL_API_INTERVAL * 1000);
+        if (response != null && response.getStatusCode().is2xxSuccessful()) {
+            log.info("Response from Data.Gov (NEA): {} ", response.getBody());
+            ingestRainfallData(response.getBody());
+        } else {
+            log.error("Failed to retrieve rainfall data from Data.Gov (NEA) on {}", LocalDateTime.now());
+        }
     }
 
     private void ingestRainfallData(RainfallDataResDTO response) {
@@ -169,6 +159,7 @@ public class RainfallServiceImpl implements RainfallService {
         rainfallTopic.setLatitude(data.getLatitude());
         rainfallTopic.setLongitude(data.getLongitude());
         rainfallTopic.setValue(data.getValue());
-        rainfallRepository.save(rainfallTopic);
+        rainfallTopic = rainfallRepository.save(rainfallTopic);
+        log.info("Rainfall data saved in database - id {}: {}", rainfallTopic.getId(), rainfallTopic);
     }
 }

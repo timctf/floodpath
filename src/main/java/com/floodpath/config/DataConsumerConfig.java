@@ -1,7 +1,5 @@
 package com.floodpath.config;
 
-import com.floodpath.constants.AppConstants;
-import com.floodpath.dto.RainfallTopicDTO;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class RainfallConsumerConfig {
+public class DataConsumerConfig {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
@@ -27,22 +25,20 @@ public class RainfallConsumerConfig {
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-        // props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.floodpath.dto.RainfallTopicDTO");
-        // props.put(JsonDeserializer.TYPE_MAPPINGS, AppConstants.RAINFALL_TOPIC_NAME + ":com.floodpath.dto.RainfallTopicDTO");
         return props;
     }
 
     @Bean
-    public ConsumerFactory<String, Object> rainfallConsumerFactory() {
+    public ConsumerFactory<String, Object> dataConsumerFactory() {
         return new DefaultKafkaConsumerFactory<>(consumerConfig());
     }
 
     @Bean
-    public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, Object>> rainfallFactory(
-            ConsumerFactory<String, Object> rainfallConsumerFactory
+    public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, Object>> dataFactory(
+            ConsumerFactory<String, Object> dataConsumerFactory
     ) {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(rainfallConsumerFactory);
+        factory.setConsumerFactory(dataConsumerFactory);
         return factory;
     }
 
