@@ -34,3 +34,5 @@ build/
 
 
 kafka_2.13-4.0.0
+
+.DS_Store
