@@ -66,7 +66,7 @@ public class CommonServiceImpl implements CommonService {
             }, 0, CARPARK_INFO_API_INTERVAL * 1000);
         }
 
-        // Carpark availability data
+        // Carpark availability data - Data.Gov (HDB)
         if (Boolean.TRUE.equals(CARPARK_AVAIL_API_ENABLE)) {
             timer.schedule(new TimerTask() {
                 @Override
