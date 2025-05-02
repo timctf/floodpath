@@ -1,9 +1,16 @@
 package com.floodpath.service.impl;
 
+import com.floodpath.dto.CarParkAvailTopicDTO;
 import com.floodpath.dto.CarParkInfoTopicDTO;
+import com.floodpath.dto.carparkavailres.CarParkAvailResDTO;
+import com.floodpath.dto.carparkavailres.CarParkAvailResItemsCarparkDataCarparkInfoDTO;
+import com.floodpath.dto.carparkavailres.CarParkAvailResItemsCarparkDataDTO;
+import com.floodpath.dto.carparkavailres.CarParkAvailResItemsDTO;
 import com.floodpath.dto.carparkinfores.CarParkInfoResDTO;
 import com.floodpath.dto.carparkinfores.CarParkInfoResRecordsDTO;
+import com.floodpath.entity.CarParkAvailTopic;
 import com.floodpath.entity.CarParkInfoTopic;
+import com.floodpath.repository.CarParkAvailRepository;
 import com.floodpath.repository.CarParkInfoRepository;
 import com.floodpath.service.BrokerService;
 import com.floodpath.service.CarParkService;
@@ -17,6 +24,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
@@ -27,12 +36,16 @@ public class CarParkServiceImpl implements CarParkService {
 
     private final BrokerService brokerService;
     private final CarParkInfoRepository carParkInfoRepository;
+    private final CarParkAvailRepository carParkAvailRepository;
 
     @Value("${floodpath.hdb.carpark.info.api.url.1}")
     private String CARPARK_INFO_API_URL_1;
 
     @Value("${floodpath.hdb.carpark.info.api.url.2}")
     private String CARPARK_INFO_API_URL_2;
+
+    @Value("${floodpath.hdb.carpark.avail.api.url}")
+    private String CARPARK_AVAIL_API_URL;
 
     @Override
     public void getCarParkInfoData(RestTemplate restTemplate, String offsetURL) {
@@ -46,11 +59,11 @@ public class CarParkServiceImpl implements CarParkService {
                     CarParkInfoResDTO.class
             );
         } catch (HttpClientErrorException e) {
-            log.error("HttpClientErrorException: {}", e.getMessage());
+            log.error("(getCarParkInfoData()) HttpClientErrorException: {}", e.getMessage());
         }
 
         if (response != null && response.getStatusCode().is2xxSuccessful()) {
-            log.info("Response from Data.Gov (HDB): {} ", response.getBody());
+            log.info("(getCarParkInfoData()) Response from Data.Gov (HDB): {} ", response.getBody());
             ingestCarParkInfoData(response.getBody());
             long offsetVal = extractOffsetValueFromURL(response.getBody().getResult().get_links().getNext());
             if (
@@ -65,7 +78,7 @@ public class CarParkServiceImpl implements CarParkService {
                 getCarParkInfoData(restTemplate, response.getBody().getResult().get_links().getNext()); // recursive call to retrieve other pages
             }
         } else {
-            log.error("Failed to retrieve carpark information data from Data.Gov (NEA) on {}", LocalDateTime.now());
+            log.error("(getCarParkInfoData()) Failed to retrieve carpark information data from Data.Gov (NEA) on {}", LocalDateTime.now());
         }
     }
 
@@ -87,22 +100,37 @@ public class CarParkServiceImpl implements CarParkService {
             !response.getResult().getRecords().isEmpty()
         ) {
             for (CarParkInfoResRecordsDTO record : response.getResult().getRecords()) {
-                brokerService.sendDataToBroker(
-                    new CarParkInfoTopicDTO(
-                        record.getCar_park_no(),
-                        record.getAddress(),
-                        record.getX_coord(),
-                        record.getY_coord(),
-                        record.getCar_park_type(),
-                        record.getType_of_parking_system(),
-                        record.getShort_term_parking(),
-                        record.getFree_parking(),
-                        record.getNight_parking(),
-                        record.getCar_park_decks(),
-                        record.getGantry_height(),
-                        record.getCar_park_basement()
-                    )
-                );
+                if (
+                    record.getCar_park_no() != null &&
+                    record.getAddress() != null &&
+                    record.getX_coord() != null &&
+                    record.getY_coord() != null &&
+                    record.getCar_park_type() != null &&
+                    record.getType_of_parking_system() != null &&
+                    record.getShort_term_parking() != null &&
+                    record.getFree_parking() != null &&
+                    record.getNight_parking() != null &&
+                    record.getCar_park_decks() != null &&
+                    record.getGantry_height() != null &&
+                    record.getCar_park_basement() != null
+                ) {
+                    brokerService.sendDataToBroker(
+                        new CarParkInfoTopicDTO(
+                            record.getCar_park_no(),
+                            record.getAddress(),
+                            record.getX_coord(),
+                            record.getY_coord(),
+                            record.getCar_park_type(),
+                            record.getType_of_parking_system(),
+                            record.getShort_term_parking(),
+                            record.getFree_parking(),
+                            record.getNight_parking(),
+                            record.getCar_park_decks(),
+                            record.getGantry_height(),
+                            record.getCar_park_basement()
+                        )
+                    );
+                }
             }
         }
     }
@@ -138,24 +166,83 @@ public class CarParkServiceImpl implements CarParkService {
         log.info("Carpark information data {} in database - car park no {}: {}", action, carParkTopic.getCarParkNo(), carParkTopic);
     }
 
-    // TODO
     @Override
     public void getCarParkAvailData(RestTemplate restTemplate) {
-        /*ResponseEntity<CarParkAvailResDTO> response = null;
+        ResponseEntity<CarParkAvailResDTO> response = null;
         try {
             response = restTemplate.getForEntity(
-                    CARPARK_INFO_API_URL,
+                    CARPARK_AVAIL_API_URL,
                     CarParkAvailResDTO.class
             );
         } catch (HttpClientErrorException e) {
-            log.error("HttpClientErrorException: {}", e.getMessage());
+            log.error("(getCarParkAvailData()) HttpClientErrorException: {}", e.getMessage());
         }
 
         if (response != null && response.getStatusCode().is2xxSuccessful()) {
-            log.info("Response from Data.Gov (HDB): {} ", response.getBody());
-            // ingestCarParkAvailData(response.getBody());
+            log.info("(getCarParkAvailData()) Response from Data.Gov (HDB): {} ", response.getBody());
+            ingestCarParkAvailData(response.getBody());
         } else {
-            log.error("Failed to retrieve carpark availability data from Data.Gov (NEA) on {}", LocalDateTime.now());
-        }*/
+            log.error("(getCarParkAvailData()) Failed to retrieve carpark availability data from Data.Gov (NEA) on {}", LocalDateTime.now());
+        }
+    }
+
+    private void ingestCarParkAvailData(CarParkAvailResDTO response) {
+        log.info("ingestCarParkAvailData(): {}", response.toString());
+        if (response.getItems() != null && !response.getItems().isEmpty()) {
+            for (CarParkAvailResItemsDTO item : response.getItems()) {
+                if (item.getCarpark_data() != null && !item.getCarpark_data().isEmpty()) {
+                    for (CarParkAvailResItemsCarparkDataDTO carparkData : item.getCarpark_data()) {
+                        if (carparkData.getCarpark_info() != null && !carparkData.getCarpark_info().isEmpty()) {
+                            for (CarParkAvailResItemsCarparkDataCarparkInfoDTO carparkInfo : carparkData.getCarpark_info()) {
+                                LocalDateTime recordedDateTime = null;
+                                try {
+                                    recordedDateTime = LocalDateTime.parse(carparkData.getUpdate_datetime(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                                } catch(DateTimeParseException e) {
+                                    log.error("Failed to convert string to LocalDateTime: {}", e.getMessage());
+                                }
+                                if (
+                                    carparkData.getCarpark_number() != null &&
+                                    recordedDateTime != null &&
+                                    carparkInfo.getTotal_lots() != null &&
+                                    carparkInfo.getLots_available() != null &&
+                                    carparkInfo.getLot_type() != null
+                                ) {
+                                    brokerService.sendDataToBroker(
+                                        new CarParkAvailTopicDTO(
+                                            carparkData.getCarpark_number(),
+                                            recordedDateTime,
+                                            carparkInfo.getTotal_lots(),
+                                            carparkInfo.getLots_available(),
+                                            carparkInfo.getLot_type()
+                                        )
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void saveCarParkAvailData(CarParkAvailTopicDTO data) {
+        List<CarParkAvailTopic> carParkAvailTopicList = carParkAvailRepository.findAllByCarParkNoAndLotTypeAndRecordedDateTime(
+            data.getCarParkNo(),
+            data.getLotType(),
+            data.getRecordedDateTime()
+        );
+        if (!carParkAvailTopicList.isEmpty()) {
+            log.info("Carpark availability record already exists for Carpark No: {}, Lot Type: {} at {}", data.getCarParkNo(), data.getLotType(), data.getRecordedDateTime());
+        } else {
+            CarParkAvailTopic carParkAvailTopic = new CarParkAvailTopic();
+            carParkAvailTopic.setCarParkNo(data.getCarParkNo());
+            carParkAvailTopic.setRecordedDateTime(data.getRecordedDateTime());
+            carParkAvailTopic.setTotalLots(data.getTotalLots());
+            carParkAvailTopic.setLotsAvailable(data.getLotsAvailable());
+            carParkAvailTopic.setLotType(data.getLotType());
+            carParkAvailTopic = carParkAvailRepository.save(carParkAvailTopic);
+            log.info("Carpark availability data saved in database - car park no {}: {}", carParkAvailTopic.getCarParkNo(), carParkAvailTopic);
+        }
     }
 }
