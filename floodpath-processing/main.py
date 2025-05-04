@@ -4,6 +4,9 @@ from typing import Optional
 from math import radians, cos, sin, asin, sqrt
 import psycopg2
 from datetime import datetime
+from geopy.geocoders import Nominatim
+from geopy.extra.rate_limiter import RateLimiter
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -38,6 +41,9 @@ DB_CONFIG = {
     "password": "pass1234",
     "host": "localhost"
 }
+
+# In-memory storage for the latest user location
+user_location_cache = {}
 
 def cleanse_carpark_data(rows):
     seen = set()
@@ -311,12 +317,6 @@ def get_rainfall_nearby(
 
     query = """
         SELECT stationid, latitude, longitude, recordeddatetime, value
-        FROM tbl_rainfall_data
-        WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND value > 0
-    """
-
-    query = """
-        SELECT stationid, latitude, longitude, recordeddatetime, value
         FROM (
             SELECT i.stationid, i.latitude, i.longitude, i.recordeddatetime, i.value,
                 RANK() OVER (PARTITION BY i.stationid ORDER BY i.recordeddatetime DESC) AS rn
@@ -359,6 +359,72 @@ def get_rainfall_nearby(
         "fromLongitude": longitude,
         "results": rainfall_points
     }
+
+@app.get("/rainfall-islandwide")
+def get_rainfall_islandwide():
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    query = """
+        SELECT stationid, latitude, longitude, recordeddatetime, value
+        FROM (
+            SELECT i.stationid, i.latitude, i.longitude, i.recordeddatetime, i.value,
+                RANK() OVER (PARTITION BY i.stationid ORDER BY i.recordeddatetime DESC) AS rn
+            FROM tbl_rainfall_data i
+            WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND value > 0
+        ) WHERE rn = 1
+    """
+
+    cur.execute(query)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    if not rows:
+        return {"message": "No rainfall data available."}
+
+    rainfall_points = [
+        {
+            "stationid": row[0],
+            "latitude": row[1],
+            "longitude": row[2],
+            "recordeddatetime": row[3],
+            "value": row[4],
+            "label": weather_map.get(row[4], ""),
+        }
+        for row in rows if row[1] is not None and row[2] is not None
+    ]
+
+    return {
+        "results": rainfall_points
+    }
+
+@app.get("/location-to-coordinates")
+def get_coordinates_from_location(
+    location: str = Query(..., description="Location string sent from Telegram bot")
+):
+    geolocator = Nominatim(user_agent="floodpath-locator")
+    geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
+    geo = geocode(f"{location}, Singapore")
+    if not geo:
+        return {"message": "Location not found."}
+
+    result = {
+        "latitude": geo.latitude,
+        "longitude": geo.longitude,
+        "label": geo.address
+    }
+
+    # Store latest user-provided location in memory
+    user_location_cache["latest"] = result
+
+    return result 
+
+@app.get("/location-latest")
+def get_latest_cached_location():
+    if "latest" not in user_location_cache:
+        return {"message": "No cached location found."}
+    return user_location_cache["latest"]
 
 # RUN THE APP: uvicorn main:app --reload
 # EXAMPLE CARPARKS API CALL: http://localhost:8000/carparks?page=1&page_size=50&carpark_type=MULTI-STOREY CAR PARK

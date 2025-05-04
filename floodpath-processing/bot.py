@@ -1,11 +1,14 @@
 import telebot
 from telebot import types
+import requests
 
 BOT_TOKEN = '7850155396:AAEnNp3qttrlHy9coS4IeB9d29xeU_YKJA0'
 bot = telebot.TeleBot(BOT_TOKEN)
 
+API_URL = "http://localhost:8000/location-to-coordinates?location="
+
 # Keep track of who is entering coordinates
-awaiting_coords = set()
+awaiting_flood_location = set()
 
 @bot.message_handler(commands=['help', 'start'])
 def show_help(message):
@@ -14,7 +17,7 @@ def show_help(message):
         "Here are the available commands:\n"
         "/start or /help - Show this help message\n"
         "/location - Share your live location\n"
-        "/coordinates - Manually enter your latitude and longitude\n"
+        "/flooding - Inform us about the area in Singapore that is flooding\n"
     )
     bot.send_message(message.chat.id, help_text, parse_mode="Markdown")
 
@@ -31,20 +34,35 @@ def handle_location(message):
     lon = message.location.longitude
     bot.reply_to(message, f"📍 Thanks! Your current location:\nLatitude: {lat}\nLongitude: {lon}")
 
-@bot.message_handler(commands=['coordinates'])
-def request_coordinates(message):
-    awaiting_coords.add(message.chat.id)
-    bot.send_message(message.chat.id, "📌 Please enter your coordinates in this format:\n`latitude,longitude`\nExample: `1.3521,103.8198`", parse_mode="Markdown")
+@bot.message_handler(commands=['flooding'])
+def request_place_name(message):
+    awaiting_flood_location.add(message.chat.id)
+    bot.send_message(message.chat.id, "Please type the name of a place you'd like me to find.")
 
-@bot.message_handler(func=lambda message: message.chat.id in awaiting_coords)
-def handle_coordinates_input(message):
-    try:
-        lat_str, lon_str = message.text.split(',')
-        lat = float(lat_str.strip())
-        lon = float(lon_str.strip())
-        bot.reply_to(message, f"📍 Coordinates received:\nLatitude: {lat}\nLongitude: {lon}")
-        awaiting_coords.discard(message.chat.id)
-    except Exception:
-        bot.reply_to(message, "⚠️ Invalid format. Please enter coordinates as: `latitude,longitude`", parse_mode="Markdown")
+@bot.message_handler(func=lambda message: message.content_type == 'text')
+def handle_text_location(message):
+    if message.chat.id not in awaiting_flood_location:
+        return  # Ignore messages not in flood location mode
+
+    location_query = message.text.strip()
+    res = requests.get(API_URL + location_query)
+
+    if res.status_code == 200:
+        data = res.json()
+        if "latitude" in data:
+            reply = (
+                f"📍 Location found:\n"
+                f"📌 {data['label']}\n"
+                f"🧭 Latitude: {data['latitude']}\n"
+                f"🧭 Longitude: {data['longitude']}"
+                f"Thank you for reporting!"
+            )
+        else:
+            reply = "❌ Sorry, I couldn't find that location."
+    else:
+        reply = "⚠️ There was an error retrieving coordinates."
+
+    bot.reply_to(message, reply)
+    awaiting_flood_location.discard(message.chat.id)  # Exit mode after use
 
 bot.infinity_polling()
