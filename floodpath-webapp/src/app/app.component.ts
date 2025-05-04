@@ -57,8 +57,8 @@ export class AppComponent implements OnInit, OnDestroy  {
     //Load token once
     // const oneMapAuthUrl = "https://www.onemap.gov.sg/api/auth/post/getToken";
     // const data = {
-    //   email: "changjunda@gmail.com",
-    //   password: "0N3mappass123_"
+    //   email: "",
+    //   password: ""
     // };
 
     // fetch(oneMapAuthUrl, {
