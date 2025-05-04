@@ -2,6 +2,7 @@ package com.floodpath.service.impl;
 
 import com.floodpath.dto.CarParkAvailTopicDTO;
 import com.floodpath.dto.CarParkInfoTopicDTO;
+import com.floodpath.dto.LatLongDTO;
 import com.floodpath.dto.carparkavailres.CarParkAvailResDTO;
 import com.floodpath.dto.carparkavailres.CarParkAvailResItemsCarparkDataCarparkInfoDTO;
 import com.floodpath.dto.carparkavailres.CarParkAvailResItemsCarparkDataDTO;
@@ -14,6 +15,7 @@ import com.floodpath.repository.CarParkAvailRepository;
 import com.floodpath.repository.CarParkInfoRepository;
 import com.floodpath.service.BrokerService;
 import com.floodpath.service.CarParkService;
+import com.floodpath.util.ConvertUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -150,6 +152,7 @@ public class CarParkServiceImpl implements CarParkService {
             action = "updated";
             carParkTopic = carParkInfoList.get(0);
         }
+        LatLongDTO latLong = ConvertUtil.convertXYToLatLong(data.getXCoord(), data.getYCoord());
         carParkTopic.setCarParkNo(data.getCarParkNo());
         carParkTopic.setAddress(data.getAddress());
         carParkTopic.setXCoord(data.getXCoord());
@@ -162,6 +165,8 @@ public class CarParkServiceImpl implements CarParkService {
         carParkTopic.setCarParkDecks(data.getCarParkDecks());
         carParkTopic.setGantryHeight(data.getGantryHeight());
         carParkTopic.setCarParkBasement(data.getCarParkBasement());
+        carParkTopic.setLatitude(latLong.getLatitude());
+        carParkTopic.setLongitude(latLong.getLongitude());
         carParkTopic = carParkInfoRepository.save(carParkTopic);
         log.info("Carpark information data {} in database - car park no {}: {}", action, carParkTopic.getCarParkNo(), carParkTopic);
     }

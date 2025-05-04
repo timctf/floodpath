@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @NoArgsConstructor
 @Entity
@@ -48,4 +50,10 @@ public class CarParkInfoTopic {
 
     @Column(name = "CARPARKBASEMENT")
     private String carParkBasement;
+
+    @Column(name = "LATITUDE")
+    private String latitude;
+
+    @Column(name = "LONGITUDE")
+    private String longitude;
 }
