@@ -151,8 +151,14 @@ public class CarParkServiceImpl implements CarParkService {
         } else {
             action = "updated";
             carParkTopic = carParkInfoList.get(0);
+            // update if null
+            if (carParkTopic.getLatitude() == null || carParkTopic.getLongitude() == null) {
+                LatLongDTO latLong = ConvertUtil.convertXYToLatLong(data.getXCoord(), data.getYCoord());
+                carParkTopic.setLatitude(latLong.getLatitude());
+                carParkTopic.setLongitude(latLong.getLongitude());
+            }
         }
-        LatLongDTO latLong = ConvertUtil.convertXYToLatLong(data.getXCoord(), data.getYCoord());
+
         carParkTopic.setCarParkNo(data.getCarParkNo());
         carParkTopic.setAddress(data.getAddress());
         carParkTopic.setXCoord(data.getXCoord());
@@ -165,8 +171,6 @@ public class CarParkServiceImpl implements CarParkService {
         carParkTopic.setCarParkDecks(data.getCarParkDecks());
         carParkTopic.setGantryHeight(data.getGantryHeight());
         carParkTopic.setCarParkBasement(data.getCarParkBasement());
-        carParkTopic.setLatitude(latLong.getLatitude());
-        carParkTopic.setLongitude(latLong.getLongitude());
         carParkTopic = carParkInfoRepository.save(carParkTopic);
         log.info("Carpark information data {} in database - car park no {}: {}", action, carParkTopic.getCarParkNo(), carParkTopic);
     }
