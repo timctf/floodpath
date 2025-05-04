@@ -23,6 +23,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @Transactional
@@ -108,6 +109,10 @@ public class RainfallServiceImpl implements RainfallService {
                             readingData.getValue() != null &&
                             !rainfallRecordsExistsInDatabase(readingData.getStationId(), recordedDateTime)
                         ) {
+                            Long value = readingData.getValue();
+                            if (AppConstants.MOCK_DATA && AppConstants.MOCK_DATA_STATION_ID.contains(readingData.getStationId())) {
+                                value = (long) ThreadLocalRandom.current().nextInt(1, 6);
+                            }
                             brokerService.sendDataToBroker(
                                 new RainfallTopicDTO(
                                     recordedDateTime,
@@ -115,7 +120,7 @@ public class RainfallServiceImpl implements RainfallService {
                                     areaName,
                                     latitude,
                                     longitude,
-                                    readingData.getValue()
+                                    value
                                 )
                             );
                         }
