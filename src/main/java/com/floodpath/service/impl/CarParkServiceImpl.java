@@ -153,9 +153,13 @@ public class CarParkServiceImpl implements CarParkService {
             carParkTopic = carParkInfoList.get(0);
             // update if null
             if (carParkTopic.getLatitude() == null || carParkTopic.getLongitude() == null) {
-                LatLongDTO latLong = ConvertUtil.convertXYToLatLong(data.getXCoord(), data.getYCoord());
-                carParkTopic.setLatitude(latLong.getLatitude());
-                carParkTopic.setLongitude(latLong.getLongitude());
+                try {
+                    LatLongDTO latLong = ConvertUtil.convertXYToLatLong(data.getXCoord(), data.getYCoord());
+                    carParkTopic.setLatitude(latLong.getLatitude());
+                    carParkTopic.setLongitude(latLong.getLongitude());
+                } catch(InterruptedException e) {
+                    log.error("InterruptedException: {}", e.getMessage());
+                }
             }
         }
 
