@@ -1,0 +1,72 @@
+<div class="parent">
+    <div class="controls">
+        <label>
+        Latitude:
+        <input type="text" class="latlng-input" [(ngModel)]="lat" placeholder="Latitude" />
+        </label>
+    
+        <label>
+        Longitude:
+        <input type="text" class="latlng-input" [(ngModel)]="lng" placeholder="Longitude" />
+        </label>
+
+        <button (click)="locateUser();">📍 My Location</button>
+        <button (click)="updateLatLng()">🔎 Update Lat/Lng</button>
+
+    </div>
+
+    <div class="map" id="map"></div>
+
+    <button class="floating-drop-btn" (click)="toggleDropMode()" title="Drop Person">{{ dropMode ? '❌' : '👤' }}</button>
+
+</div>
+
+<!-- Routebox -->
+<div class="routebox" [class.showRouteBox]="routeDetails !== null">
+    <div *ngIf="routeDetails" id="itineraryItem" class="itineraryItem" [attr.routename]="routeDetails.viaRoute">
+        <!-- ❌ Close button -->
+        <button class="close-button" (click)="clearRoute()">✖</button>
+
+        <div id="itineraryRouteSummary" class="itineraryRouteSummary">
+          <img src="https://mobile.onemap.gov.sg/web/images/icon_car.png" />
+          <br>
+          <span class="nonptRouteInfo"> via {{ routeDetails.viaRoute }}</span>
+        </div>
+        <br>
+        <div id="itineraryDuration" class="itineraryDuration">
+            <span>{{ getDuration(routeDetails.route_summary.total_time) }}</span>
+            </div>
+        
+            <div id="itineraryFare" class="itineraryFare">
+            {{ (routeDetails.route_summary.total_distance / 1000).toFixed(1) }} km
+        </div>
+        <br>
+        <br>
+        <div>
+            <div id="itineraryRouteDetails" class="itineraryRouteDetails inactive">
+            <div class="itineraryLegStartIcon"></div>
+            <div class="itineraryLegStart">
+                {{ routeDetails.route_summary.start_point }}
+            </div>
+        
+            <div class="itineraryLegLine"></div>
+            <div class="itineraryLegDetails">
+                {{ routeDetails.route_instructions[0][9] }}
+            </div>
+        
+            <div class="itineraryLegEndIcon"></div>
+            <div class="itineraryLegEnd">
+                {{ routeDetails.route_summary.end_point }}
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Snackbar -->
+<div class="snackbar" [class.show]="snackbarVisible">{{ snackbarMessage }}</div>
+
+<!-- Loader Cover Page -->
+<div class="loader-overlay" *ngIf="loadingCarparks || loadingFloodProneAreas || loadingFloodAreas || loadingRoute || loadingRainAreas">
+    <div class="loader"></div>
+</div>

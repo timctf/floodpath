@@ -1,0 +1,173 @@
+
+/* CONTROL PANEL START HERE */
+div.controls {
+  position: absolute;
+  z-index: 1000;
+  background-color: white;
+  padding: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  display: flex;
+  gap: 4px;
+}
+
+.latlng-input {
+  width: 150px;
+}
+/* CONTROL PANEL END HERE */
+
+/* FLOATING PIN START HERE */
+.floating-drop-btn {
+  position: absolute;
+  bottom: 5;
+  left: 5;
+  z-index: 1001;
+  width: 40px;
+  height: 40px;
+  color: white;
+  font-size: 20px;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.floating-drop-btn:hover {
+  background-color: #0056b3;
+}
+
+.floating-drop-btn.active {
+  background-color: #dc3545; /* red-ish for cancel mode */
+}
+/* FLOATING PIN END HERE */
+
+/* MAP START HERE */
+div.map {
+  height: 98vh;
+  width: 99vw;;
+}
+/* MAP END HERE */
+
+/* FLOAT AREA START HERE */
+.circle-label {
+  background: rgba(255, 255, 255, 0.8);
+  color: #333;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+/* FLOAT AREA END HERE */
+
+/* ROUTEBOX START HERE */
+.routebox {
+  position: absolute;
+  z-index: 1000;
+  top: 20px;
+  right: 20px;
+  padding: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  display: flex;
+  gap: 4px;
+  display: none;
+}
+
+.itineraryItem {
+  position: relative;
+  padding: 16px;
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.close-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #444;
+}
+
+.close-button:hover {
+  color: red;
+}
+
+.showRouteBox {
+  display: block;
+}
+
+.itineraryRouteSummary img {
+  width: 30px;
+  height: 30px;
+}
+
+.itineraryDuration span {
+  float: left;
+}
+
+.itineraryFare {
+  float: right;
+}
+
+
+.itineraryRouteDetails {
+  grid-column: 2 / span 2;
+  display: grid;
+  grid-template-columns: 10% 1fr;
+  grid-template-rows: auto [last-line];
+  pointer-events: auto;
+}
+
+.itineraryRouteDetails .itineraryLegStartIcon {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-image: url(https://mobile.onemap.gov.sg/web/images/mapmarker.png);
+  background-size: 12px 16px;
+}
+
+.itineraryRouteDetails .itineraryLegStartIcon, .itineraryRouteDetails .itineraryLegEndIcon {
+  grid-column: 1;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  height: 18px;
+  justify-content: center;
+}
+
+.itineraryRouteDetails .itineraryLegStart, .itineraryRouteDetails .itineraryLegEnd {
+  grid-column: 2 / span 2;
+  margin-top: 10px;
+  font-family: Helvetica;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+.itineraryRouteDetails .itineraryLegLine {
+  grid-column: 1;
+  grid-row: 2 / span 9000;
+  border-left: 2px solid #4eaeff;
+  left: 100%;
+  transform: translate(50%);
+}
+
+.itineraryRouteDetails .itineraryLegDetails {
+  grid-column: 2;
+  font-size: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.itineraryRouteDetails .itineraryLegEndIcon {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-image: url(https://mobile.onemap.gov.sg/web/images/icon_destination.png);
+  background-size: 12px 16px;
+}
+/* ROUTEBOX END HERE */
