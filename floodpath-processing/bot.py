@@ -55,7 +55,7 @@ def handle_text_location(message):
                 f"📌 {data['label']}\n"
                 f"🧭 Latitude: {data['latitude']}\n"
                 f"🧭 Longitude: {data['longitude']}"
-                f"Thank you for reporting!"
+                f"\nThank you for reporting!"
             )
         else:
             reply = "❌ Sorry, I couldn't find that location."

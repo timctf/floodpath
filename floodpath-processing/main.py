@@ -21,8 +21,8 @@ weather_map = {
     1: "Light rain",
     2: "Moderate rain",
     3: "Heavy rain",
-    4: "Thunderstorm",
-    5: "Typhoon"
+    4: "Intense Rain",
+    5: "Torrential Rain"
 }
 
 # Allow all CORS for development
