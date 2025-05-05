@@ -3,7 +3,7 @@ import * as L from 'leaflet';
 import { LatLng } from 'leaflet';
 import { CarparkLocation, DirectionRequest, DirectionResponse, FloodArea, FloodProneArea, OneMapRouteResponse, RainArea } from './app.model';
 import { AppService } from './app.service';
-import { Observable, Subscription, map, of } from 'rxjs';
+import { Observable, Subscription, interval, map, of, switchMap } from 'rxjs';
 import * as polyline from '@mapbox/polyline';
 
 @Component({
@@ -16,9 +16,18 @@ export class AppComponent implements OnInit, OnDestroy  {
   
   private token: string | null = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzOGQ1OTk1MzkzZTg0NWQ4NTcwMzI0MzIzNGMxZGQ1OSIsImlzcyI6Imh0dHA6Ly9pbnRlcm5hbC1hbGItb20tcHJkZXppdC1pdC1uZXctMTYzMzc5OTU0Mi5hcC1zb3V0aGVhc3QtMS5lbGIuYW1hem9uYXdzLmNvbS9hcGkvdjIvdXNlci9wYXNzd29yZCIsImlhdCI6MTc0NjMyNjU4NiwiZXhwIjoxNzQ2NTg1Nzg2LCJuYmYiOjE3NDYzMjY1ODYsImp0aSI6Inp4UldiVzNxUDBKZjh6a1UiLCJ1c2VyX2lkIjo2OTA1LCJmb3JldmVyIjpmYWxzZX0.lqKP4cVUC7HUvoxpGRaWMadEQhwAQbjTLEE_pCIeFGM';
 
+  private pollSub: Subscription;
+
   private map!: L.Map; // <-- Main map
   personIcon!: L.Icon; // <-- Person position icon
   carparkIcon!: L.Icon; // <-- Carpark position icon
+  floodproneIcon!: L.Icon; // <-- Floodprone icon
+
+  lightRainIcon!: L.Icon; // <-- Light rain icon
+  moderateRainIcon!: L.Icon; // <-- Moderate rain icon
+  heavyRainIcon!: L.Icon; // <-- Heavy rain icon
+  intenseRainIcon!: L.Icon; // <-- Intense rain icon
+  torrentialRainIcon!: L.Icon; // <-- Torrential rain icon
 
   private userMarker?: L.Marker; // <-- Track the GPS marker
   public lat: number | null = null; // <-- Latitude of user pos
@@ -32,6 +41,8 @@ export class AppComponent implements OnInit, OnDestroy  {
   routeVisible = false; // tracks if route should be shown
   routeDetails: OneMapRouteResponse = null;
   
+  myRainArea: L.Circle | null = null;
+
   dropMode: boolean = false; // tracks if user is in "drop mode"
   
   snackbarMessage: string = '';
@@ -39,14 +50,16 @@ export class AppComponent implements OnInit, OnDestroy  {
 
   loadingCarparks = true;
   loadingFloodProneAreas = true;
-  loadingFloodAreas = true;
+  loadingFloodAreas = false;
   loadingRainAreas = false;
+  loadingIslandWideRainAreas = true;
   loadingRoute = false;
 
   carparks: CarparkLocation[] = [];
   floodProneAreas: FloodProneArea[] = [];
   floodAreas: FloodArea[] = [];
   rainAreas: RainArea = null;
+  islandWideRainAreas: RainArea = null;
 
   private subscriptions: Subscription[] = [];
   constructor(
@@ -54,47 +67,29 @@ export class AppComponent implements OnInit, OnDestroy  {
   ) {}
 
   ngOnInit(): void {
-    //Load token once
-    // const oneMapAuthUrl = "https://www.onemap.gov.sg/api/auth/post/getToken";
-    // const data = {
-    //   email: "",
-    //   password: ""
-    // };
-
-    // fetch(oneMapAuthUrl, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(data)
-    // })
-    // .then(response => {
-    //   if (!response.ok) {
-    //     throw new Error(`HTTP error! Status: ${response.status}`);
-    //   }
-    //   return response.json();  // Parse response as JSON
-    // })
-    // .then(data => {
-    //   console.log(data);  // Log the response data to the console
-
-    //   console.log('Token loaded:', data.access_token);
-    //   this.token = data.access_token;
-
       this.initIcons();
       this.initMap();
       this.loadCarParkData();
       this.loadFloodProneAreaData();
-      this.loadFloodAreaData();
-    // })
-    // .catch(error => {
-    //   console.error('Error:', error);  // Log any errors
-    // });
+      this.getIslandWideRainAreaData();
+
+      this.pollSub = interval(5000) // every 5 seconds
+      .pipe(
+        switchMap(() => this.appService.getFloodAreaData())
+      )
+      .subscribe((res) => {
+        this.processFloodAreaData(res); // or append, filter, etc.
+      });
 
   }
 
   ngOnDestroy(): void {
     // Loop and unsubscribe from all
     this.subscriptions.forEach(sub => sub.unsubscribe());
+
+    if (this.pollSub) {
+      this.pollSub.unsubscribe(); // clean up on component destroy
+    }
   }
 
   ngDoCheck(): void {
@@ -143,7 +138,6 @@ export class AppComponent implements OnInit, OnDestroy  {
 
     this.loadRainAreaData(lat, lng);
 
-  
   }
 
   displayRoute(): void {
@@ -190,9 +184,50 @@ export class AppComponent implements OnInit, OnDestroy  {
 
     this.carparkIcon = L.icon({
       iconUrl: 'https://cdn-icons-png.flaticon.com/512/2205/2205084.png',
+      iconSize: [12, 12],
+      iconAnchor: [6, 12],
+      popupAnchor: [0, -12],
+    });
+
+    this.floodproneIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/128/18215/18215616.png',
       iconSize: [32, 32],
-      iconAnchor: [16, 32],
-      popupAnchor: [0, -32]
+      iconAnchor: [16, 16]
+    });
+
+    // Light Rain (☁️ Single raindrop)
+    this.lightRainIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/128/15524/15524302.png',
+      iconSize: [50, 50],
+      iconAnchor: [25, 25]
+    });
+
+    // Moderate Rain (🌦️ Two droplets)
+    this.moderateRainIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/128/16943/16943402.png',
+      iconSize: [50, 50],
+      iconAnchor: [25, 25]
+    });
+
+    // Heavy Rain (🌧️ Cloud + rain)
+    this.heavyRainIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/128/12744/12744946.png',
+      iconSize: [50, 50],
+      iconAnchor: [25, 25]
+    });
+
+    // Intense Rain (🌩️ Rain + lightning)
+    this.intenseRainIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/128/4724/4724091.png',
+      iconSize: [50, 50],
+      iconAnchor: [25, 25]
+    });
+
+    // Torrential Rain (⛈️ Flood/hazard)
+    this.torrentialRainIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/128/1247/1247779.png',
+      iconSize: [50, 50],
+      iconAnchor: [50, 50]
     });
   }
 
@@ -279,16 +314,23 @@ export class AppComponent implements OnInit, OnDestroy  {
     );
   }
 
-  loadFloodAreaData() {
-    this.subscriptions.push(
-      this.appService.getFloodAreaData().subscribe((res: FloodArea[]) => {
-        this.floodAreas = res;
-        this.loadingFloodAreas = false;
-        
+  processFloodAreaData(res: FloodArea) {
+
+    //make sure not duplicate
+    if(res) {
+      const exists = this.floodAreas.some(area =>
+        area.latitude === res.latitude &&
+        area.longitude === res.longitude &&
+        area.label === res.label
+      );
+    
+      if (!exists) {
+        this.floodAreas.push(res);
         //Populate data
-        this.plotFloodAreaData();
-      })
-    );
+        this.plotFloodAreaData(res);
+      }
+    }
+
   }
 
   loadRainAreaData(lat: number, lng: number) {
@@ -303,13 +345,32 @@ export class AppComponent implements OnInit, OnDestroy  {
         
         this.rainAreas = ra;
         this.loadingRainAreas = false;
-        
+        this.myRainArea?.remove();
+
         //Populate data
         this.plotRainAreaData();
       })
     );
   }
-  
+
+  getIslandWideRainAreaData() {
+    this.loadingIslandWideRainAreas = true;
+    this.subscriptions.push(
+      this.appService.getIslandWideRainAreaData().subscribe((res: any) => {
+        let ra: RainArea = {
+          latitude: res.fromLatitude,
+          longitude: res.fromLongitude,
+          rainfall: res.results
+        }
+        
+        this.islandWideRainAreas = ra;
+        this.loadingIslandWideRainAreas = false;
+        
+        //Populate data
+        this.plotIslandRainAreaData();
+      })
+    );
+  }
 
   locateUser(): void {
     if (navigator.geolocation) {
@@ -429,18 +490,21 @@ export class AppComponent implements OnInit, OnDestroy  {
     if (this.floodProneAreas && this.floodProneAreas.length > 0) {
       console.log('plotFloodProneAreaData2');
       this.floodProneAreas.forEach(floodProneArea => {
-        this.drawRadius(floodProneArea.latitude, floodProneArea.longitude, 0.2, 0.05, 'green', 'green', floodProneArea.label);
+        this.drawFloodRadius(floodProneArea.latitude, floodProneArea.longitude, 0.2, 0.05, 'green', 'green', floodProneArea.label);
       });
     }
   }
 
-  plotFloodAreaData(): void {
+  plotFloodAreaData(floodArea: FloodArea): void {
     console.log('plotFloodAreaData1');
-    if (this.floodAreas && this.floodAreas.length > 0) {
-      console.log('plotFloodAreaData2');
-      this.floodAreas.forEach(floodArea => {
-        this.drawRadius(floodArea.latitude, floodArea.longitude, 0.5, 0.3, 'red', 'red', floodArea.label);
-      });
+    // if (this.floodAreas && this.floodAreas.length > 0) {
+    //   console.log('plotFloodAreaData2');
+    //   this.floodAreas.forEach(floodArea => {
+    //     this.drawRadius(floodArea.latitude, floodArea.longitude, 0.5, 0.3, 'red', 'red', floodArea.label);
+    //   });
+    // }
+    if(floodArea) {
+      this.drawRadius(floodArea.latitude, floodArea.longitude, 0.5, 0.3, 'red', 'red', 'Flood detected @ ' + floodArea.label);
     }
   }
 
@@ -449,7 +513,65 @@ export class AppComponent implements OnInit, OnDestroy  {
     if (this.rainAreas && this.rainAreas.rainfall.length > 0) {
       console.log('plotRainAreaData2');
       this.rainAreas.rainfall.forEach(rainArea => {
-        this.drawRadius(rainArea.latitude, rainArea.longitude, 2, 0.3, 'none', 'blue', rainArea.label);
+        this.drawMyAreaRainfallRadius(rainArea.latitude, rainArea.longitude, 2, 0.2, 'none', 'blue', rainArea.label);
+      });
+    }
+  }
+
+  plotIslandRainAreaData(): void {
+    console.log('plotIslandRainAreaData');
+    if (this.islandWideRainAreas && this.islandWideRainAreas.rainfall.length > 0) {
+      console.log('plotIslandRainAreaData');
+      this.islandWideRainAreas.rainfall.forEach(rainArea => {
+        this.drawRainfallRadius(rainArea.latitude, rainArea.longitude, 2, 0.2, 'none', '#4eaeff', rainArea.label);
+      });
+    }
+  }
+
+  drawFloodRadius(lat: number, lng: number, radiusInKm: number, opacity: number, bordercolor: string, colour: string, label?: string) {
+    const radiusCircle = L.circle([lat, lng], {
+      radius: radiusInKm * 1000,
+      color: bordercolor,
+      fillColor: colour,
+      fillOpacity: opacity
+    });
+    
+    const iconMarker = L.marker([lat, lng], { icon: this.floodproneIcon, title: 'Floodprone Area: '+label, opacity: 1 });
+
+    // Group circle and icon together
+    const circleGroup = L.layerGroup([radiusCircle, iconMarker]).addTo(this.map);
+  }
+
+  drawRainfallRadius(lat: number, lng: number, radiusInKm: number, opacity: number, bordercolor: string, colour: string, label?: string) {
+    const radiusCircle = L.circle([lat, lng], {
+      radius: radiusInKm * 1000,
+      color: bordercolor,
+      fillColor: colour,
+      fillOpacity: opacity
+    });
+    
+    const iconMarker = L.marker([lat, lng], { icon: this.getRainIcon(label), title: label, opacity: 1 });
+
+    // Group circle and icon together
+    const circleGroup = L.layerGroup([radiusCircle, iconMarker]).addTo(this.map);
+
+  }
+
+  drawMyAreaRainfallRadius(lat: number, lng: number, radiusInKm: number, opacity: number, bordercolor: string, colour: string, label?: string) {
+    this.myRainArea = L.circle([lat, lng], {
+      radius: radiusInKm * 1000,
+      color: bordercolor,
+      fillColor: colour,
+      fillOpacity: opacity
+    })
+    
+    this.myRainArea.addTo(this.map);
+    
+    if(label) {
+      this.myRainArea.bindTooltip(label, {
+        permanent: true, // Always show
+        direction: 'center', // Puts it in the middle of the circle
+        className: 'circle-label'
       });
     }
   }
@@ -469,6 +591,14 @@ export class AppComponent implements OnInit, OnDestroy  {
         className: 'circle-label'
       });
     }
+  }
+
+  getRainIcon(rainfall: string): L.Icon {
+    if (rainfall === 'Light rain') return this.lightRainIcon;
+    else if (rainfall === 'Moderate rain') return this.moderateRainIcon;
+    else if (rainfall === 'Heavy rain') return this.heavyRainIcon;
+    else if (rainfall === 'Intense Rain') return this.intenseRainIcon;
+    else return this.torrentialRainIcon;
   }
 
 

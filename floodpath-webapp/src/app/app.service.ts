@@ -92,24 +92,24 @@ export class AppService {
         //   });
     }
 
-    getFloodAreaData(): Observable<FloodArea[]> {
-        //return this.http.post<FloodArea[]>(this.appUrl + 'getFloodArea', {});
+    getFloodAreaData(): Observable<FloodArea> {
+        return this.http.get<FloodArea>(this.appUrl + 'location-latest', {});
 
         //Mocking
-        let a1 : FloodArea = {
-            latitude: 1.312505602711895, 
-            longitude: 103.9410296361213, 
-            label: 'Flooded Area (Bayshore MRT)'
-        };
+        // let a1 : FloodArea = {
+        //     latitude: 1.312505602711895, 
+        //     longitude: 103.9410296361213, 
+        //     label: 'Flooded Area (Bayshore MRT)'
+        // };
 
-        return new Observable(observer => {
-            setTimeout(() => {
-              observer.next([
-                a1
-              ]);
-              observer.complete();
-            }, 1000); // Simulate a 2-second delay
-          });
+        // return new Observable(observer => {
+        //     setTimeout(() => {
+        //       observer.next([
+        //         a1
+        //       ]);
+        //       observer.complete();
+        //     }, 1000); // Simulate a 2-second delay
+        //   });
     }
 
     getRainAreaData(lat: number, lng: number): Observable<RainArea[]> {
@@ -153,6 +153,26 @@ export class AppService {
         //       );
         //       observer.complete();
         //     }, 2000); // Simulate a 2-second delay
+        //   });
+    }
+
+    getIslandWideRainAreaData(): Observable<RainArea[]> {
+        return this.http.get<RainArea[]>(this.appUrl + 'rainfall-islandwide', {});
+
+        //Mocking
+        // let a1 : FloodArea = {
+        //     latitude: 1.312505602711895, 
+        //     longitude: 103.9410296361213, 
+        //     label: 'Heavy shower'
+        // };
+
+        // return new Observable(observer => {
+        //     setTimeout(() => {
+        //       observer.next([
+        //         a1
+        //       ]);
+        //       observer.complete();
+        //     }, 1000); // Simulate a 2-second delay
         //   });
     }
 

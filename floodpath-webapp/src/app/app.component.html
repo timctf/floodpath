@@ -48,11 +48,13 @@
             <div class="itineraryLegStart">
                 {{ routeDetails.route_summary.start_point }}
             </div>
-        
-            <div class="itineraryLegLine"></div>
-            <div class="itineraryLegDetails">
-                {{ routeDetails.route_instructions[0][9] }}
-            </div>
+            
+            <ng-container *ngFor="let step of routeDetails.route_instructions; let i = index">
+                <div class="itineraryLegLine"></div>
+                <div class="itineraryLegDetails">
+                  {{ step[9] }}
+                </div>
+            </ng-container>
         
             <div class="itineraryLegEndIcon"></div>
             <div class="itineraryLegEnd">
@@ -67,6 +69,6 @@
 <div class="snackbar" [class.show]="snackbarVisible">{{ snackbarMessage }}</div>
 
 <!-- Loader Cover Page -->
-<div class="loader-overlay" *ngIf="loadingCarparks || loadingFloodProneAreas || loadingFloodAreas || loadingRoute || loadingRainAreas">
+<div class="loader-overlay" *ngIf="loadingCarparks || loadingFloodProneAreas || loadingFloodAreas || loadingRoute || loadingRainAreas || loadingIslandWideRainAreas">
     <div class="loader"></div>
 </div>
