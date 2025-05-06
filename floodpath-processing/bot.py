@@ -32,7 +32,21 @@ def ask_for_location(message):
 def handle_location(message):
     lat = message.location.latitude
     lon = message.location.longitude
-    bot.reply_to(message, f"📍 Thanks! Your current location:\nLatitude: {lat}\nLongitude: {lon}")
+
+    try:
+        resp = requests.get("http://localhost:8000/current-location", params={"latitude": lat, "longitude": lon})
+        if resp.status_code == 200:
+            data = resp.json()
+            bot.reply_to(message,
+                f"✅ Your location has been stored!\n"
+                f"📌 {data.get('label')}\n"
+                f"🧭 Lat: {data.get('latitude')}\n"
+                f"🧭 Lon: {data.get('longitude')}"
+            )
+        else:
+            bot.reply_to(message, "⚠️ Failed to store your location.")
+    except Exception as e:
+        bot.reply_to(message, "⚠️ Error contacting server.")
 
 @bot.message_handler(commands=['flooding'])
 def request_place_name(message):

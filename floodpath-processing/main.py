@@ -42,8 +42,9 @@ DB_CONFIG = {
     "host": "localhost"
 }
 
-# In-memory storage for the latest user location
+# In-memory storage for the latest user location and current location
 user_location_cache = {}
+current_location_store = {}
 
 def cleanse_carpark_data(rows):
     seen = set()
@@ -425,6 +426,35 @@ def get_latest_cached_location():
     if "latest" not in user_location_cache:
         return {"message": "No cached location found."}
     return user_location_cache["latest"]
+
+@app.get("/current-location")
+def store_current_location(
+    latitude: float = Query(..., description="Latitude from Telegram location"),
+    longitude: float = Query(..., description="Longitude from Telegram location")
+):
+    geolocator = Nominatim(user_agent="floodpath-locator")
+    geo = geolocator.reverse((latitude, longitude), language="en")
+    label = geo.address
+    if not geo:
+        label = "No specific location found."
+
+    result = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "label": label
+    }
+
+    current_location_store["latest"] = result
+    return result
+
+@app.get("/current-location-latest")
+def get_latest_cached_location():
+    if "latest" not in user_location_cache:
+        return {"message": "No cached location found."}
+    result = current_location_store["latest"]
+    current_location_store["latest"] = {} # Empty after calling API
+    return result
+
 
 # RUN THE APP: uvicorn main:app --reload
 # EXAMPLE CARPARKS API CALL: http://localhost:8000/carparks?page=1&page_size=50&carpark_type=MULTI-STOREY CAR PARK
