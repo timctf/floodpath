@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
 import * as L from 'leaflet';
 import { LatLng } from 'leaflet';
-import { CarparkLocation, DirectionRequest, DirectionResponse, FloodArea, FloodProneArea, OneMapRouteResponse, RainArea } from './app.model';
+import { CarparkLocation, DirectionRequest, DirectionResponse, FloodArea, FloodProneArea, OneMapRouteResponse, RainArea, Telelocation } from './app.model';
 import { AppService } from './app.service';
 import { Observable, Subscription, interval, map, of, switchMap } from 'rxjs';
 import * as polyline from '@mapbox/polyline';
@@ -17,6 +17,8 @@ export class AppComponent implements OnInit, OnDestroy  {
   private token: string | null = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzOGQ1OTk1MzkzZTg0NWQ4NTcwMzI0MzIzNGMxZGQ1OSIsImlzcyI6Imh0dHA6Ly9pbnRlcm5hbC1hbGItb20tcHJkZXppdC1pdC1uZXctMTYzMzc5OTU0Mi5hcC1zb3V0aGVhc3QtMS5lbGIuYW1hem9uYXdzLmNvbS9hcGkvdjIvdXNlci9wYXNzd29yZCIsImlhdCI6MTc0NjMyNjU4NiwiZXhwIjoxNzQ2NTg1Nzg2LCJuYmYiOjE3NDYzMjY1ODYsImp0aSI6Inp4UldiVzNxUDBKZjh6a1UiLCJ1c2VyX2lkIjo2OTA1LCJmb3JldmVyIjpmYWxzZX0.lqKP4cVUC7HUvoxpGRaWMadEQhwAQbjTLEE_pCIeFGM';
 
   private pollSub: Subscription;
+  private pollLocation: Subscription;
+
 
   private map!: L.Map; // <-- Main map
   personIcon!: L.Icon; // <-- Person position icon
@@ -28,6 +30,8 @@ export class AppComponent implements OnInit, OnDestroy  {
   heavyRainIcon!: L.Icon; // <-- Heavy rain icon
   intenseRainIcon!: L.Icon; // <-- Intense rain icon
   torrentialRainIcon!: L.Icon; // <-- Torrential rain icon
+
+  private stillUpdating: boolean = false; 
 
   private userMarker?: L.Marker; // <-- Track the GPS marker
   public lat: number | null = null; // <-- Latitude of user pos
@@ -81,6 +85,14 @@ export class AppComponent implements OnInit, OnDestroy  {
         this.processFloodAreaData(res); // or append, filter, etc.
       });
 
+      this.pollLocation = interval(2000) // every 2 seconds
+      .pipe(
+        switchMap(() => this.appService.getTelelocationData())
+      )
+      .subscribe((res) => {
+        this.processTeleLocationData(res); // or append, filter, etc.
+      });
+
   }
 
   ngOnDestroy(): void {
@@ -90,11 +102,17 @@ export class AppComponent implements OnInit, OnDestroy  {
     if (this.pollSub) {
       this.pollSub.unsubscribe(); // clean up on component destroy
     }
+
+    if (this.pollLocation) {
+      this.pollLocation.unsubscribe(); // clean up on component destroy
+    }
+
+    
   }
 
   ngDoCheck(): void {
     if (
-      this.lat !== null && this.lng !== null &&
+      this.lat !== null && this.lng !== null && this.stillUpdating === false &&
       (this.lat !== this.lastLat || this.lng !== this.lastLng)
     ) {
       this.lastLat = this.lat;
@@ -329,6 +347,28 @@ export class AppComponent implements OnInit, OnDestroy  {
         //Populate data
         this.plotFloodAreaData(res);
       }
+    }
+
+  }
+
+  processTeleLocationData(res: Telelocation) {
+
+    //make sure not duplicate
+    if(res && res.latitude && res.longitude) {
+
+      // Clear previous marker if it exists
+      this.clearUserMarker();
+
+      // Add a marker
+      this.userMarker = L.marker([res.latitude, res.longitude], {icon: this.personIcon})
+      .addTo(this.map)
+      .bindPopup('You are here!');
+
+      this.stillUpdating = true;
+      this.lat = res.latitude;
+      this.lng = res.longitude;
+      this.stillUpdating = false;
+
     }
 
   }

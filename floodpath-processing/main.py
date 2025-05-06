@@ -449,7 +449,7 @@ def store_current_location(
 
 @app.get("/current-location-latest")
 def get_latest_cached_location():
-    if "latest" not in user_location_cache:
+    if "latest" not in current_location_store:
         return {"message": "No cached location found."}
     result = current_location_store["latest"]
     current_location_store["latest"] = {} # Empty after calling API

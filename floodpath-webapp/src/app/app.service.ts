@@ -1,7 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable, map } from "rxjs";
-import { CarparkLocation, DirectionRequest, DirectionResponse, FloodArea, FloodProneArea, RainArea } from "./app.model";
+import { CarparkLocation, DirectionRequest, DirectionResponse, FloodArea, FloodProneArea, RainArea, Telelocation } from "./app.model";
 
 @Injectable({
     providedIn: 'root'
@@ -174,6 +174,10 @@ export class AppService {
         //       observer.complete();
         //     }, 1000); // Simulate a 2-second delay
         //   });
+    }
+
+    getTelelocationData(): Observable<Telelocation> {
+        return this.http.get<Telelocation>(this.appUrl + 'current-location-latest', {});
     }
 
 

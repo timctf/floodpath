@@ -20,6 +20,12 @@ export interface FloodArea {
     label: string;
 }
 
+export interface Telelocation {
+    latitude: number;
+    longitude: number;
+    label: string;
+}
+
 export interface RainArea {
     latitude: number;
     longitude: number;
