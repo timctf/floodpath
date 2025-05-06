@@ -7,6 +7,9 @@ from datetime import datetime
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
 from pydantic import BaseModel
+from pyspark.sql import SparkSession
+from pyspark.sql.window import Window
+from pyspark.sql.functions import rank, col
 
 app = FastAPI()
 
@@ -45,6 +48,69 @@ DB_CONFIG = {
 # In-memory storage for the latest user location and current location
 user_location_cache = {}
 current_location_store = {}
+
+# postgres db config (for connection via spark)
+jdbc_url = "jdbc:postgresql://localhost:5432/floodpath"
+username = "postgres"
+password = "pass1234"
+driver_class = "org.postgresql.Driver"
+jdbc_driver_path = "postgresql-42.7.5.jar" 
+rainfall_data_table = "TBL_RAINFALL_DATA"
+carpark_info_data_table = "TBL_CARPARK_INFO_DATA"
+carpark_avail_data_table = "TBL_CARPARK_AVAIL_DATA"
+
+@app.get("/spark/carparks")
+def test():
+    spark = SparkSession.builder \
+        .appName("PostgreSQLConnection") \
+        .config("spark.jars", jdbc_driver_path) \
+        .getOrCreate()
+    
+    try:
+        carparkInfoDf = spark.read.format("jdbc") \
+            .option("url", jdbc_url) \
+            .option("dbtable", carpark_info_data_table) \
+            .option("user", username) \
+            .option("password", password) \
+            .option("driver", driver_class) \
+            .load()
+        
+        carparkAvailDf = spark.read.format("jdbc") \
+            .option("url", jdbc_url) \
+            .option("dbtable", carpark_avail_data_table) \
+            .option("user", username) \
+            .option("password", password) \
+            .option("driver", driver_class) \
+            .load()
+        
+        joinedDf = carparkInfoDf.join(carparkAvailDf, on=carparkInfoDf["carparkno"] == carparkAvailDf["carparkno"], how='inner')
+        baseFilteredDf = joinedDf.filter("lotstype = 'C'") \
+            .filter(carparkInfoDf["latitude"].isNotNull()) \
+            .filter(carparkInfoDf["longitude"].isNotNull()) \
+            .filter("carparktype = 'MULTI-STOREY CAR PARK'")
+        windowSpec = Window.partitionBy(carparkAvailDf["carparkno"]).orderBy(carparkAvailDf["recordeddatetime"].desc())
+        rankedDf = baseFilteredDf.withColumn("rn", rank().over(windowSpec))
+        rankFilteredDf = rankedDf.filter("rn = 1")
+        selectDf = rankFilteredDf.select(
+            carparkInfoDf["carparkno"], 
+            carparkInfoDf["carparktype"], 
+            carparkInfoDf["address"], 
+            carparkInfoDf["latitude"], 
+            carparkInfoDf["longitude"],
+            carparkAvailDf["totallots"],
+            carparkAvailDf["lotsavailable"],
+            carparkAvailDf["lotstype"],
+            carparkAvailDf["recordeddatetime"]
+        )
+        carparkList = selectDf.collect()
+        spark.stop()
+
+        results = cleanse_carpark_data(carparkList)
+        return {
+            "results": results
+        }
+    except Exception as e:
+        print(f"Error reading from PostgreSQL: {e}")
 
 def cleanse_carpark_data(rows):
     seen = set()
