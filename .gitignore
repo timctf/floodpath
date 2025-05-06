@@ -1,2 +1,4 @@
 */.angular
 .idea
+.DS_Store
+.vscode
