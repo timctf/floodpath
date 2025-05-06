@@ -60,7 +60,7 @@ carpark_info_data_table = "TBL_CARPARK_INFO_DATA"
 carpark_avail_data_table = "TBL_CARPARK_AVAIL_DATA"
 
 @app.get("/spark/carparks")
-def test():
+def get_carparks_spark():
     spark = SparkSession.builder \
         .appName("PostgreSQLConnection") \
         .config("spark.jars", jdbc_driver_path) \
