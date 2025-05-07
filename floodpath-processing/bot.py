@@ -39,22 +39,15 @@ def handle_location(message):
             data = resp.json()
             print("CURRENT LOCATION API DATA:")
             print(data)
-            if "latitude" in data and "message" in data:
-                print("bot.py - Entered line 43.")
-                reply = (
-                    f"📍 Location found:\n"
-                    f"📌 {data['label']}\n"
-                    f"🧭 Latitude: {data['latitude']}\n"
-                    f"🧭 Longitude: {data['longitude']}"
-                    f"🧭 Message: {data['message']}"
-                    f"\nThank you for reporting!"
-                )
-            elif "latitude" in data and "route_instructions" in data:
-                print("bot.py - Entered line 53.")
-                route_instructions = data["route_instructions"]
+             if "message" in data:
+                print("bot.py - Received error message.")
+                reply = f"⚠️ {data['message']}"
 
-                # Extract the final instruction string from each sublist
+            elif "latitude" in data and "route_instructions" in data:
+                print("bot.py - Entered line 47.")
+                route_instructions = data["route_instructions"]
                 steps = "\n".join(f"➡️ {step[-1]}" for step in route_instructions)
+
                 reply = (
                     f"📍 Location found:\n"
                     f"📌 {data['label']}\n"
@@ -63,12 +56,23 @@ def handle_location(message):
                     f"📝 Route Instructions:\n{steps}\n\n"
                     f"✅ Thank you for reporting!"
                 )
+
+            elif "latitude" in data:
+                reply = (
+                    f"📍 Location found:\n"
+                    f"📌 {data['label']}\n"
+                    f"🧭 Latitude: {data['latitude']}\n"
+                    f"🧭 Longitude: {data['longitude']}\n"
+                    f"✅ Thank you for reporting!"
+                )
+
             else:
-                reply = "❌ Sorry, I couldn't find that location."
+                reply = "❌ Sorry, I couldn't interpret the location data."
         else:
             bot.reply_to(message, "⚠️ Failed to store your location.")
     except Exception as e:
         bot.reply_to(message, "⚠️ Error contacting server.")
+    bot.reply_to(message, reply)
 
 @bot.message_handler(commands=['flooding'])
 def request_place_name(message):
