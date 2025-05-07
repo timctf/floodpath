@@ -487,7 +487,32 @@ def get_coordinates_from_location(
     # Store latest user-provided location in memory
     user_location_cache["latest"] = result
 
-    res = get_nearest_carpark(geo.latitude, geo.longitude)
+    return result 
+
+@app.get("/location-latest")
+def get_latest_cached_location():
+    if "latest" not in user_location_cache:
+        return {"message": "No cached location found."}
+    return user_location_cache["latest"]
+
+@app.get("/current-location")
+def store_current_location(
+    latitude: float = Query(..., description="Latitude from Telegram location"),
+    longitude: float = Query(..., description="Longitude from Telegram location")
+):
+    geolocator = Nominatim(user_agent="floodpath-locator")
+    geo = geolocator.reverse((latitude, longitude), language="en")
+    label = geo.address
+    if not geo:
+        label = "No specific location found."
+
+    result = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "label": label
+    }
+
+    res = get_nearest_carpark(latitude, longitude)
 
     if 'message' in res:
         return {
@@ -513,33 +538,10 @@ def get_coordinates_from_location(
     route = requests.get(url, headers=head)
     if route.status_code == 200:
         data = route.json()
-
-    result['route_instructions'] = data.route_instructions
-
-    return result 
-
-@app.get("/location-latest")
-def get_latest_cached_location():
-    if "latest" not in user_location_cache:
-        return {"message": "No cached location found."}
-    return user_location_cache["latest"]
-
-@app.get("/current-location")
-def store_current_location(
-    latitude: float = Query(..., description="Latitude from Telegram location"),
-    longitude: float = Query(..., description="Longitude from Telegram location")
-):
-    geolocator = Nominatim(user_agent="floodpath-locator")
-    geo = geolocator.reverse((latitude, longitude), language="en")
-    label = geo.address
-    if not geo:
-        label = "No specific location found."
-
-    result = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "label": label
-    }
+        if "route_instructions" in data:
+            result["route_instructions"] = data["route_instructions"]
+        else:
+            result["route_instructions"] = []
 
     current_location_store["latest"] = result
     return result
