@@ -39,7 +39,7 @@ def handle_location(message):
             data = resp.json()
             print("CURRENT LOCATION API DATA:")
             print(data)
-             if "message" in data:
+            if "message" in data:
                 print("bot.py - Received error message.")
                 reply = f"⚠️ {data['message']}"
 
