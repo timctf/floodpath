@@ -25,7 +25,7 @@ public class ConvertUtil {
         try {
             response = restTemplate.exchange(finalURL, HttpMethod.GET, entity, LatLongDTO.class);
         } catch (HttpClientErrorException e) {
-            log.error("(getCarParkInfoData()) HttpClientErrorException: {}", e.getMessage());
+            log.error("(convertXYToLatLong()) HttpClientErrorException: {}", e.getMessage());
         }
         if (response != null && response.getStatusCode().is2xxSuccessful()) {
             return response.getBody();

@@ -32,8 +32,12 @@ public class BrokerServiceImpl implements BrokerService {
             log.info("Carpark information data from Data.Gov (HDB) processed, proceeding to send to broker - {}", data);
             dataKafkaTemplate.send(AppConstants.CARPARK_INFO_TOPIC_NAME, data);
         } else if (data instanceof CarParkAvailTopicDTO) {
-            log.info("Carpark availability data from Data.Gov (HDB) processed, proceeding to send to broker - {}", data);
+            String carParkAvailLogMsg = "Carpark availability data from Data.Gov (HDB) processed, proceeding to send to broker ({}) - {}";
+            log.info(carParkAvailLogMsg, AppConstants.CARPARK_AVAIL_TOPIC_NAME, data);
             dataKafkaTemplate.send(AppConstants.CARPARK_AVAIL_TOPIC_NAME, data);
+            // send additionally to kafka broker (carParkAgg topic) for aggregation of carpark info + availability
+            // log.info(carParkAvailLogMsg, AppConstants.CARPARK_AGG_TOPIC_NAME, data);
+            // dataKafkaTemplate.send(AppConstants.CARPARK_AGG_TOPIC_NAME, data);
         } else {
             log.info("No valid combination to send to broker: {}", data);
         }

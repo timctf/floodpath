@@ -12,6 +12,9 @@ public class AppConstants {
     public static final String CARPARK_AVAIL_TOPIC_NAME = "carParkAvail";
     public static final String CARPARK_AVAIL_GROUP_ID = "carParkAvailGroupId";
 
+    //
+    public static final String CARPARK_AGG_TOPIC_NAME = "carParkAgg";
+
     public static final String ZONE_ID = "Asia/Singapore";
 
     public static final boolean MOCK_DATA = true;

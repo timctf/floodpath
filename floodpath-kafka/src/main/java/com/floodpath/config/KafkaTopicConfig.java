@@ -18,4 +18,19 @@ public class KafkaTopicConfig {
     public NewTopic rainfallTopic() {
         return TopicBuilder.name(AppConstants.RAINFALL_TOPIC_NAME).build();
     }
+
+    @Bean
+    public NewTopic carparkInfoTopic() {
+        return TopicBuilder.name(AppConstants.CARPARK_INFO_TOPIC_NAME).build();
+    }
+
+    @Bean
+    public NewTopic carparkAvailTopic() {
+        return TopicBuilder.name(AppConstants.CARPARK_AVAIL_TOPIC_NAME).build();
+    }
+
+    @Bean
+    public NewTopic carparkAggTopic() {
+        return TopicBuilder.name(AppConstants.CARPARK_AGG_TOPIC_NAME).build();
+    }
 }

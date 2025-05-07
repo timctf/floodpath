@@ -7,9 +7,6 @@ from datetime import datetime
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
 from pydantic import BaseModel
-from pyspark.sql import SparkSession
-from pyspark.sql.window import Window
-from pyspark.sql.functions import rank, col
 import requests
 from urllib.parse import urlencode
 
@@ -50,69 +47,6 @@ DB_CONFIG = {
 # In-memory storage for the latest user location and current location
 user_location_cache = {}
 current_location_store = {}
-
-# postgres db config (for connection via spark)
-jdbc_url = "jdbc:postgresql://localhost:5432/floodpath"
-username = "postgres"
-password = "pass1234"
-driver_class = "org.postgresql.Driver"
-jdbc_driver_path = "postgresql-42.7.5.jar" 
-rainfall_data_table = "TBL_RAINFALL_DATA"
-carpark_info_data_table = "TBL_CARPARK_INFO_DATA"
-carpark_avail_data_table = "TBL_CARPARK_AVAIL_DATA"
-
-@app.get("/spark/carparks")
-def get_carparks_spark():
-    spark = SparkSession.builder \
-        .appName("PostgreSQLConnection") \
-        .config("spark.jars", jdbc_driver_path) \
-        .getOrCreate()
-    
-    try:
-        carparkInfoDf = spark.read.format("jdbc") \
-            .option("url", jdbc_url) \
-            .option("dbtable", carpark_info_data_table) \
-            .option("user", username) \
-            .option("password", password) \
-            .option("driver", driver_class) \
-            .load()
-        
-        carparkAvailDf = spark.read.format("jdbc") \
-            .option("url", jdbc_url) \
-            .option("dbtable", carpark_avail_data_table) \
-            .option("user", username) \
-            .option("password", password) \
-            .option("driver", driver_class) \
-            .load()
-        
-        joinedDf = carparkInfoDf.join(carparkAvailDf, on=carparkInfoDf["carparkno"] == carparkAvailDf["carparkno"], how='inner')
-        baseFilteredDf = joinedDf.filter("lotstype = 'C'") \
-            .filter(carparkInfoDf["latitude"].isNotNull()) \
-            .filter(carparkInfoDf["longitude"].isNotNull()) \
-            .filter("carparktype = 'MULTI-STOREY CAR PARK'")
-        windowSpec = Window.partitionBy(carparkAvailDf["carparkno"]).orderBy(carparkAvailDf["recordeddatetime"].desc())
-        rankedDf = baseFilteredDf.withColumn("rn", rank().over(windowSpec))
-        rankFilteredDf = rankedDf.filter("rn = 1")
-        selectDf = rankFilteredDf.select(
-            carparkInfoDf["carparkno"], 
-            carparkInfoDf["carparktype"], 
-            carparkInfoDf["address"], 
-            carparkInfoDf["latitude"], 
-            carparkInfoDf["longitude"],
-            carparkAvailDf["totallots"],
-            carparkAvailDf["lotsavailable"],
-            carparkAvailDf["lotstype"],
-            carparkAvailDf["recordeddatetime"]
-        )
-        carparkList = selectDf.collect()
-        spark.stop()
-
-        results = cleanse_carpark_data(carparkList)
-        return {
-            "results": results
-        }
-    except Exception as e:
-        print(f"Error reading from PostgreSQL: {e}")
 
 def cleanse_carpark_data(rows):
     seen = set()
@@ -174,26 +108,26 @@ def get_carparks(
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
-    # base_query = """
-    #     SELECT i.carparkno, i.carparktype, i.address, i.latitude, i.longitude,
-    #            a.totallots, a.lotsavailable, a.lotstype
-    #     FROM tbl_carpark_info_data i
-    #     JOIN tbl_carpark_avail_data a ON i.carparkno = a.carparkno
-    #     WHERE i.latitude IS NOT NULL AND i.longitude IS NOT NULL AND a.lotstype = 'C'
+    # base_query = """ 
+    #     SELECT carparkno, carparktype, address, latitude, longitude,
+    #             totallots, lotsavailable, lotstype, recordeddatetime
+    #         FROM (  
+    #         SELECT i.carparkno, i.carparktype, i.address, i.latitude, i.longitude,
+    #             a.totallots, a.lotsavailable, a.lotstype, a.recordeddatetime,
+    #             RANK() OVER (PARTITION BY a.carparkno ORDER BY a.recordeddatetime DESC) AS rn
+    #         FROM tbl_carpark_info_data i
+    #         JOIN tbl_carpark_avail_data a ON i.carparkno = a.carparkno
+    #         WHERE i.latitude IS NOT NULL AND i.longitude IS NOT NULL AND a.lotstype = 'C' AND i.carparktype = %s
+    #     ) WHERE rn = 1
     # """
+
     base_query = """ 
         SELECT carparkno, carparktype, address, latitude, longitude,
                 totallots, lotsavailable, lotstype, recordeddatetime
-            FROM (  
-            SELECT i.carparkno, i.carparktype, i.address, i.latitude, i.longitude,
-                a.totallots, a.lotsavailable, a.lotstype, a.recordeddatetime,
-                RANK() OVER (PARTITION BY a.carparkno ORDER BY a.recordeddatetime DESC) AS rn
-            FROM tbl_carpark_info_data i
-            JOIN tbl_carpark_avail_data a ON i.carparkno = a.carparkno
-            WHERE i.latitude IS NOT NULL AND i.longitude IS NOT NULL AND a.lotstype = 'C' AND i.carparktype = %s
-        ) WHERE rn = 1
+        FROM tbl_carpark_aggregated
     """
-    where_clause = " AND 1=1 " if carpark_type else ""
+
+    where_clause = " WHERE %s = 'MULTI-STOREY CAR PARK' " if carpark_type else ""
     order_pagination = "ORDER BY recordeddatetime DESC LIMIT %s OFFSET %s"
 
     query = f"{base_query} {where_clause} {order_pagination}"
