@@ -11,6 +11,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.window import Window
 from pyspark.sql.functions import rank, col
 import requests
+from urllib.parse import urlencode
 
 app = FastAPI()
 
@@ -496,8 +497,20 @@ def get_coordinates_from_location(
             "message": "No carpark found within 5km radius."
         }
 
+    params = {
+        "start": f"{res['fromLatitude']},{res['fromLongitude']}",
+        "end": f"{res['toLatitude']},{res['toLongitude']}",
+        "routeType": "drive",
+        "date": res["date"],
+        "time": res["time"],
+        "mode": "TRANSIT",
+        "numItineraries": 3
+    }
+
+    url = "https://www.onemap.gov.sg/api/public/routingsvc/route?" + urlencode(params)
+
     head = {'Authorization': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzOGQ1OTk1MzkzZTg0NWQ4NTcwMzI0MzIzNGMxZGQ1OSIsImlzcyI6Imh0dHA6Ly9pbnRlcm5hbC1hbGItb20tcHJkZXppdC1pdC1uZXctMTYzMzc5OTU0Mi5hcC1zb3V0aGVhc3QtMS5lbGIuYW1hem9uYXdzLmNvbS9hcGkvdjIvdXNlci9wYXNzd29yZCIsImlhdCI6MTc0NjYyNzYxMSwiZXhwIjoxNzQ2ODg2ODExLCJuYmYiOjE3NDY2Mjc2MTEsImp0aSI6Im1XZ0k4YzVTcG9Od3BTeWMiLCJ1c2VyX2lkIjo2OTA1LCJmb3JldmVyIjpmYWxzZX0.yYmMHx_wf_ZdIaRoiORLwQQ3CeWyJUOGNTToO7hVj_g'}
-    route = requests.get("https://www.onemap.gov.sg/api/public/routingsvc/route?start="+res.fromLatitude+"%2C"+res.fromLongitude+"&end="+res.toLatitude+"%2C"+res.toLongitude+"&routeType=drive&date="+res.date+"&time="+res.time+"&mode=TRANSIT&numItineraries=3", headers=head)
+    route = requests.get(url, headers=head)
     if route.status_code == 200:
         data = route.json()
 
