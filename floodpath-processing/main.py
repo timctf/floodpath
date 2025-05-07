@@ -544,6 +544,11 @@ def store_current_location(
         data = route.json()
         if "route_instructions" in data:
             result["route_instructions"] = data["route_instructions"]
+            summary = data.get("route_summary", {})
+            result["start_point"] = summary.get("start_point")
+            result["end_point"] = summary.get("end_point")
+            result["total_time"] = summary.get("total_time")        # in seconds
+            result["total_distance"] = summary.get("total_distance")  # in meters
         else:
             result["route_instructions"] = []
 

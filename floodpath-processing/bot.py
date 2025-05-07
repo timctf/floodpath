@@ -48,13 +48,26 @@ def handle_location(message):
                 route_instructions = data["route_instructions"]
                 steps = "\n".join(f"➡️ {step[-1]}" for step in route_instructions)
 
+                # Extract optional route summary info
+                start = data.get("start_point", "Unknown start")
+                end = data.get("end_point", "Unknown end")
+                time_sec = data.get("total_time", 0)
+                distance_m = data.get("total_distance", 0)
+
+                time_min = round(time_sec / 60)
+                distance_km = round(distance_m / 1000, 2)
+
                 reply = (
                     f"📍 Location found:\n"
                     f"📌 {data['label']}\n"
                     f"🧭 Latitude: {data['latitude']}\n"
                     f"🧭 Longitude: {data['longitude']}\n\n"
+                    f"🧭 Start: {start}\n"
+                    f"🧭 End: {end}\n"
+                    f"⏱ Estimated Time: {time_min} min\n"
+                    f"📏 Distance: {distance_km} km\n\n"
                     f"📝 Route Instructions:\n{steps}\n\n"
-                    f"✅ Thank you for reporting!"
+                    f"✅ Thank you for using Floodpath!"
                 )
 
             elif "latitude" in data:
@@ -63,7 +76,7 @@ def handle_location(message):
                     f"📌 {data['label']}\n"
                     f"🧭 Latitude: {data['latitude']}\n"
                     f"🧭 Longitude: {data['longitude']}\n"
-                    f"✅ Thank you for reporting!"
+                    f"✅ Thank you for using Floodpath!"
                 )
 
             else:
@@ -95,7 +108,7 @@ def handle_text_location(message):
                 f"📌 {data['label']}\n"
                 f"🧭 Latitude: {data['latitude']}\n"
                 f"🧭 Longitude: {data['longitude']}"
-                f"\nThank you for reporting!"
+                f"\nThank you for using Floodpath!"
             )
         else:
             reply = "❌ Sorry, I couldn't find that location."
