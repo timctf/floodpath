@@ -36,13 +36,31 @@ def handle_location(message):
     try:
         resp = requests.get("http://localhost:8000/current-location", params={"latitude": lat, "longitude": lon})
         if resp.status_code == 200:
-            data = resp.json()
-            bot.reply_to(message,
-                f"✅ Your location has been stored!\n"
-                f"📌 {data.get('label')}\n"
-                f"🧭 Lat: {data.get('latitude')}\n"
-                f"🧭 Lon: {data.get('longitude')}"
-            )
+             data = res.json()
+            if "latitude" in data and "message" in data:
+                reply = (
+                    f"📍 Location found:\n"
+                    f"📌 {data['label']}\n"
+                    f"🧭 Latitude: {data['latitude']}\n"
+                    f"🧭 Longitude: {data['longitude']}"
+                    f"🧭 Message: {data['message']}"
+                    f"\nThank you for reporting!"
+                )
+            elif "latitude" in data and "message" not in data and "route_instructions" in data:
+                route_instructions = data["route_instructions"]
+
+                # Extract the final instruction string from each sublist
+                steps = "\n".join(f"➡️ {step[-1]}" for step in route_instructions)
+                reply = (
+                    f"📍 Location found:\n"
+                    f"📌 {data['label']}\n"
+                    f"🧭 Latitude: {data['latitude']}\n"
+                    f"🧭 Longitude: {data['longitude']}\n\n"
+                    f"📝 Route Instructions:\n{steps}\n\n"
+                    f"✅ Thank you for reporting!"
+                )
+            else:
+                reply = "❌ Sorry, I couldn't find that location."
         else:
             bot.reply_to(message, "⚠️ Failed to store your location.")
     except Exception as e:
@@ -63,27 +81,13 @@ def handle_text_location(message):
 
     if res.status_code == 200:
         data = res.json()
-        if "latitude" in data and "message" in data:
+        if "latitude" in data:
             reply = (
                 f"📍 Location found:\n"
                 f"📌 {data['label']}\n"
                 f"🧭 Latitude: {data['latitude']}\n"
                 f"🧭 Longitude: {data['longitude']}"
-                f"🧭 Message: {data['message']}"
                 f"\nThank you for reporting!"
-            )
-        elif "latitude" in data and "message" not in data and "route_instructions" in data:
-            route_instructions = data["route_instructions"]
-
-            # Extract the final instruction string from each sublist
-            steps = "\n".join(f"➡️ {step[-1]}" for step in route_instructions)
-            reply = (
-                f"📍 Location found:\n"
-                f"📌 {data['label']}\n"
-                f"🧭 Latitude: {data['latitude']}\n"
-                f"🧭 Longitude: {data['longitude']}\n\n"
-                f"📝 Route Instructions:\n{steps}\n\n"
-                f"✅ Thank you for reporting!"
             )
         else:
             reply = "❌ Sorry, I couldn't find that location."
