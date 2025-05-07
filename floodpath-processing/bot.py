@@ -72,7 +72,7 @@ def handle_text_location(message):
                 f"🧭 Message: {data['message']}"
                 f"\nThank you for reporting!"
             )
-        elif if "latitude" in data and "message" not in data:
+        elif "latitude" in data and "message" not in data:
             reply = (
                 f"📍 Location found:\n"
                 f"📌 {data['label']}\n"
