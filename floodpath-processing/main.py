@@ -513,7 +513,7 @@ def store_current_location(
     }
 
     res = get_nearest_carpark(latitude, longitude)
-    print("RES:")
+    print("NEAREST CARPARK RESPONSE:")
     print(res)
 
     if 'message' in res:

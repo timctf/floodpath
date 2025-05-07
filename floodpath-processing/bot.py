@@ -36,11 +36,11 @@ def handle_location(message):
     try:
         resp = requests.get("http://localhost:8000/current-location", params={"latitude": lat, "longitude": lon})
         if resp.status_code == 200:
-            data = res.json()
+            data = resp.json()
             print("CURRENT LOCATION API DATA:")
             print(data)
             if "latitude" in data and "message" in data:
-                print("bot.py - Entered line 41.")
+                print("bot.py - Entered line 43.")
                 reply = (
                     f"📍 Location found:\n"
                     f"📌 {data['label']}\n"
@@ -49,8 +49,8 @@ def handle_location(message):
                     f"🧭 Message: {data['message']}"
                     f"\nThank you for reporting!"
                 )
-            elif "latitude" in data and "message" not in data and "route_instructions" in data:
-                print("bot.py - Entered line 51.")
+            elif "latitude" in data and "route_instructions" in data:
+                print("bot.py - Entered line 53.")
                 route_instructions = data["route_instructions"]
 
                 # Extract the final instruction string from each sublist
