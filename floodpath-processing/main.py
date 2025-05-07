@@ -485,6 +485,13 @@ def get_coordinates_from_location(
     # Store latest user-provided location in memory
     user_location_cache["latest"] = result
 
+    res = get_nearest_carpark(geo.latitude, geo.longitude)
+    route = requests.get("https://www.onemap.gov.sg/api/public/routingsvc/route?start="+res.fromLatitude+"%2C"+res.fromLongitude+"&end="+res.toLatitude+"%2C"+res.toLongitude+"&routeType=drive&date="+res.date+"&time="+res.time+"&mode=TRANSIT&numItineraries=3")
+    if route.status_code == 200:
+        data = route.json()
+        print("JSON RESPONSE:")
+        print(data)
+
     return result 
 
 @app.get("/location-latest")
