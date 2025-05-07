@@ -513,6 +513,8 @@ def store_current_location(
     }
 
     res = get_nearest_carpark(latitude, longitude)
+    print("RES:")
+    print(res)
 
     if 'message' in res:
         return {
@@ -536,6 +538,8 @@ def store_current_location(
 
     head = {'Authorization': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzOGQ1OTk1MzkzZTg0NWQ4NTcwMzI0MzIzNGMxZGQ1OSIsImlzcyI6Imh0dHA6Ly9pbnRlcm5hbC1hbGItb20tcHJkZXppdC1pdC1uZXctMTYzMzc5OTU0Mi5hcC1zb3V0aGVhc3QtMS5lbGIuYW1hem9uYXdzLmNvbS9hcGkvdjIvdXNlci9wYXNzd29yZCIsImlhdCI6MTc0NjYyNzYxMSwiZXhwIjoxNzQ2ODg2ODExLCJuYmYiOjE3NDY2Mjc2MTEsImp0aSI6Im1XZ0k4YzVTcG9Od3BTeWMiLCJ1c2VyX2lkIjo2OTA1LCJmb3JldmVyIjpmYWxzZX0.yYmMHx_wf_ZdIaRoiORLwQQ3CeWyJUOGNTToO7hVj_g'}
     route = requests.get(url, headers=head)
+    print("ROUTE:")
+    print(route)
     if route.status_code == 200:
         data = route.json()
         if "route_instructions" in data:
@@ -543,6 +547,8 @@ def store_current_location(
         else:
             result["route_instructions"] = []
 
+    print("CURRENT LOCATION RESULT:")
+    print(result)
     current_location_store["latest"] = result
     return result
 
