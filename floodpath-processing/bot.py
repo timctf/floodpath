@@ -72,13 +72,18 @@ def handle_text_location(message):
                 f"🧭 Message: {data['message']}"
                 f"\nThank you for reporting!"
             )
-        elif "latitude" in data and "message" not in data:
+        elif "latitude" in data and "message" not in data and "route_instructions" in data:
+            route_instructions = data["route_instructions"]
+
+            # Extract the final instruction string from each sublist
+            steps = "\n".join(f"➡️ {step[-1]}" for step in route_instructions)
             reply = (
                 f"📍 Location found:\n"
                 f"📌 {data['label']}\n"
                 f"🧭 Latitude: {data['latitude']}\n"
-                f"🧭 Longitude: {data['longitude']}"
-                f"\nThank you for reporting!"
+                f"🧭 Longitude: {data['longitude']}\n\n"
+                f"📝 Route Instructions:\n{steps}\n\n"
+                f"✅ Thank you for reporting!"
             )
         else:
             reply = "❌ Sorry, I couldn't find that location."

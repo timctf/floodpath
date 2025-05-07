@@ -500,8 +500,8 @@ def get_coordinates_from_location(
     route = requests.get("https://www.onemap.gov.sg/api/public/routingsvc/route?start="+res.fromLatitude+"%2C"+res.fromLongitude+"&end="+res.toLatitude+"%2C"+res.toLongitude+"&routeType=drive&date="+res.date+"&time="+res.time+"&mode=TRANSIT&numItineraries=3", headers=head)
     if route.status_code == 200:
         data = route.json()
-        print("JSON RESPONSE:")
-        print(data)
+
+    result['route_instructions'] = data.route_instructions
 
     return result 
 
