@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from pyspark.sql import SparkSession
 from pyspark.sql.window import Window
 from pyspark.sql.functions import rank, col
+import requests
 
 app = FastAPI()
 
@@ -486,6 +487,15 @@ def get_coordinates_from_location(
     user_location_cache["latest"] = result
 
     res = get_nearest_carpark(geo.latitude, geo.longitude)
+
+    if 'message' in res:
+        return {
+            "latitude": geo.latitude,
+            "longitude": geo.longitude,
+            "label": geo.address,
+            "message": "No carpark found within 5km radius."
+        }
+
     route = requests.get("https://www.onemap.gov.sg/api/public/routingsvc/route?start="+res.fromLatitude+"%2C"+res.fromLongitude+"&end="+res.toLatitude+"%2C"+res.toLongitude+"&routeType=drive&date="+res.date+"&time="+res.time+"&mode=TRANSIT&numItineraries=3")
     if route.status_code == 200:
         data = route.json()

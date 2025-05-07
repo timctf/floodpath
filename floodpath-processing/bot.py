@@ -63,7 +63,16 @@ def handle_text_location(message):
 
     if res.status_code == 200:
         data = res.json()
-        if "latitude" in data:
+        if "latitude" in data and "message" in data:
+            reply = (
+                f"📍 Location found:\n"
+                f"📌 {data['label']}\n"
+                f"🧭 Latitude: {data['latitude']}\n"
+                f"🧭 Longitude: {data['longitude']}"
+                f"🧭 Message: {data['message']}"
+                f"\nThank you for reporting!"
+            )
+        elif if "latitude" in data and "message" not in data:
             reply = (
                 f"📍 Location found:\n"
                 f"📌 {data['label']}\n"
