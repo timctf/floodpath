@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import * as L from 'leaflet';
 import { LatLng } from 'leaflet';
 import { CarparkLocation, DirectionRequest, DirectionResponse, FloodArea, FloodProneArea, OneMapRouteResponse, RainArea, Telelocation } from './app.model';
@@ -14,6 +14,8 @@ import * as polyline from '@mapbox/polyline';
 })
 export class AppComponent implements OnInit, OnDestroy  {
   
+  @ViewChild('promptBoxMarker') promptBoxMarker!: ElementRef;
+
   private token: string | null = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzOGQ1OTk1MzkzZTg0NWQ4NTcwMzI0MzIzNGMxZGQ1OSIsImlzcyI6Imh0dHA6Ly9pbnRlcm5hbC1hbGItb20tcHJkZXppdC1pdC1uZXctMTYzMzc5OTU0Mi5hcC1zb3V0aGVhc3QtMS5lbGIuYW1hem9uYXdzLmNvbS9hcGkvdjIvdXNlci9wYXNzd29yZCIsImlhdCI6MTc0NjYyNzYxMSwiZXhwIjoxNzQ2ODg2ODExLCJuYmYiOjE3NDY2Mjc2MTEsImp0aSI6Im1XZ0k4YzVTcG9Od3BTeWMiLCJ1c2VyX2lkIjo2OTA1LCJmb3JldmVyIjpmYWxzZX0.yYmMHx_wf_ZdIaRoiORLwQQ3CeWyJUOGNTToO7hVj_g';
 
   private pollSub: Subscription;
@@ -432,19 +434,34 @@ export class AppComponent implements OnInit, OnDestroy  {
       console.log("inRainZone: "+ inRainZone);
 
       if(inFloodZone) {
+        this.promptBoxMarker.nativeElement.classList.add('redClass');
+        this.promptBoxMarker.nativeElement.classList.remove('orangeClass');
+        this.promptBoxMarker.nativeElement.classList.remove('greenClass');
         this.promptDetails.push('You are currently in a flooded area. ');
         this.promptDetails.push('Please follow the directions to get to a multi story carpark immediately. ');
       } else if(inFloodProneZone && inRainZone) {
+        this.promptBoxMarker.nativeElement.classList.add('redClass');
+        this.promptBoxMarker.nativeElement.classList.remove('orangeClass');
+        this.promptBoxMarker.nativeElement.classList.remove('greenClass');
         this.promptDetails.push('You are currently in a flood prone area and it is raining.');
         this.promptDetails.push('It is highly recommended to relocate your vehicle to the nearest multi story carpark. ');
-      } else if(inFloodProneZone && ! inRainZone) {
+      } else if(inFloodProneZone && !inRainZone) {
+        this.promptBoxMarker.nativeElement.classList.add('orangeClass');
+        this.promptBoxMarker.nativeElement.classList.remove('redClass');
+        this.promptBoxMarker.nativeElement.classList.remove('greenClass');
         this.promptDetails.push('You are currently in a flood prone area, the weather seems good for now. ');
         this.promptDetails.push('Please monitor the weather conditions.  ');
         this.promptDetails.push('Feel free to follow the instructions if required. ');
       } else if(inRainZone) {
+        this.promptBoxMarker.nativeElement.classList.add('greenClass');
+        this.promptBoxMarker.nativeElement.classList.remove('redClass');
+        this.promptBoxMarker.nativeElement.classList.remove('orangeClass');
         this.promptDetails.push('Rainfall detected in your area. ');
         this.promptDetails.push('Feel free to follow the instructions if required. ');
       } else {
+        this.promptBoxMarker.nativeElement.classList.add('greenClass');
+        this.promptBoxMarker.nativeElement.classList.remove('redClass');
+        this.promptBoxMarker.nativeElement.classList.remove('orangeClass');
         this.promptDetails.push('You are not located in a flood risk zone and the weather seems great. ');
       }
       
@@ -602,7 +619,7 @@ export class AppComponent implements OnInit, OnDestroy  {
     if (this.islandWideRainAreas && this.islandWideRainAreas.rainfall.length > 0) {
       console.log('plotIslandRainAreaData');
       this.islandWideRainAreas.rainfall.forEach(rainArea => {
-        this.drawRainfallRadius(rainArea.latitude, rainArea.longitude, 2, 0.2, 'none', '#4eaeff', rainArea.stationid+': '+rainArea.label);
+        this.drawRainfallRadius(rainArea.latitude, rainArea.longitude, 2, 0.2, 'none', '#4eaeff', rainArea.label);
       });
     }
   }
@@ -673,6 +690,7 @@ export class AppComponent implements OnInit, OnDestroy  {
   }
 
   getRainIcon(rainfall: string): L.Icon {
+    console.log('@@@' + rainfall);
     if (rainfall === 'Light rain') return this.lightRainIcon;
     else if (rainfall === 'Moderate rain') return this.moderateRainIcon;
     else if (rainfall === 'Heavy rain') return this.heavyRainIcon;

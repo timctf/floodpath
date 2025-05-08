@@ -195,6 +195,18 @@ div.map {
 .showPrompt {
   display: block;
 }
+
+.redClass {
+  background: lightcoral;
+}
+
+.orangeClass {
+  background: rgb(240, 156, 0);
+}
+
+.greenClass {
+  background: green;
+}
 /* PROMPTBOX END HERE */
 
 
