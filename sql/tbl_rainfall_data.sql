@@ -25,8 +25,8 @@ ALTER TABLE IF EXISTS public.tbl_rainfall_data
 -- Name: tbl_rainfall_data tbl_rainfall_data_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.tbl_rainfall_data
-    ADD CONSTRAINT tbl_rainfall_data_pkey PRIMARY KEY (id);
+--ALTER TABLE ONLY public.tbl_rainfall_data
+    --ADD CONSTRAINT tbl_rainfall_data_pkey PRIMARY KEY (id);
 
 --
 -- TOC entry 4889 (class 0 OID 16445)
