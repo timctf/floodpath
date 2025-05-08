@@ -16,7 +16,7 @@ jdbc_url = "jdbc:postgresql://" + host + ":" + port + "/" + db_name
 username = "postgres"
 password = "pass1234"
 driver_class = "org.postgresql.Driver"
-jdbc_driver_path = "postgresql-42.7.5.jar" 
+jdbc_driver_path = "drivers/postgresql-42.7.5.jar" 
 
 # tables
 rainfall_data_table = "TBL_RAINFALL_DATA"
@@ -36,7 +36,7 @@ DB_CONFIG = {
 }
 
 def carpark_agg_process():
-    print("Carpark aggregation process started")
+    print("[carpark_agg_process] Carpark aggregation process started")
 
     sparkPostgres = SparkSession.builder \
         .appName("PostgreSQLConnection") \
@@ -96,12 +96,7 @@ def carpark_agg_process():
             carparkAvailDf["lotstype"],
             carparkAvailDf["recordeddatetime"]
         )
-
-        # delete car parks that have record in the aggregated table
-        # existingCarParkNos = [row[0] for row in carparkAvailDf.select("carparkno").distinct().collect()]
-        # if (len(existingCarParkNos) > 0):
-        #     print("Found " + str(len(existingCarParkNos)) + " carpark data in carpark aggregated table. Proceeding to delete")
-        #     deleteExistingCarParkNoInCarParkAvail(existingCarParkNos)
+        print("[carpark_agg_process] carpark info and availability data cleansed and aggregated")
 
         # write into db
         selectDf.write.format("jdbc") \
@@ -112,37 +107,16 @@ def carpark_agg_process():
             .option("driver", driver_class) \
             .mode("overwrite").save()
             # .mode("append").save()
-        print("Updated carpark aggregated table in db")
+        print("[carpark_agg_process] Updated carpark aggregated table in db")
 
         sparkPostgres.stop()
         sparkReader.stop()
-        print("Carpark aggregation process ended")
+        print("[carpark_agg_process] Carpark aggregation process ended")
     except Exception as e:
-        print(f"Error: {e}")
-
-def deleteExistingCarParkNoInCarParkAvail(existingCarParkNos):
-    try:
-        conn = psycopg2.connect(DB_CONFIG)
-        cursor = conn.cursor()
-        placeholders = ', '.join(['%s'] * len(existingCarParkNos))
-        delete_query = f"DELETE FROM {carpark_agg_table} WHERE carparkno IN ({placeholders})"
-        cursor.execute(delete_query, existingCarParkNos)
-        conn.commit()
-        print("Deleted " + str(len(existingCarParkNos)) + "from the carpark aggregated table in db")
-    except psycopg2.Error as e:
-        print(f"Error interacting with PostgreSQL: {e}")
-        if conn:
-            conn.rollback()
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+        print(f"[carpark_agg_process] Error: {e}")
 
 def main():
-    print("Carpark aggregated listener started")
+    print("[main] Scheduler service started")
     schedule.every(1).minutes.do(carpark_agg_process)
 
     while True:
@@ -151,4 +125,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    print("Carpark aggregated listener stopped")
+    print("[main] Scheduler service stopped")

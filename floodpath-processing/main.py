@@ -253,25 +253,33 @@ def get_nearest_carpark(
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
+    # query = """
+    #     SELECT carparkno, carparktype, address, latitude, longitude,
+    #             totallots, lotsavailable, lotstype, recordeddatetime
+    #     FROM (
+    #         SELECT i.carparkno, i.carparktype, i.address, i.latitude, i.longitude,
+    #             a.totallots, a.lotsavailable, a.lotstype, a.recordeddatetime,
+    #             RANK() OVER (PARTITION BY a.carparkno ORDER BY a.recordeddatetime DESC) AS rn
+    #         FROM tbl_carpark_info_data i
+    #         JOIN tbl_carpark_avail_data a ON i.carparkno = a.carparkno
+    #         WHERE i.latitude IS NOT NULL AND i.longitude IS NOT NULL AND a.lotstype = 'C' AND i.carparktype = 'MULTI-STOREY CAR PARK'
+    #     ) WHERE rn = 1
+    # """
+
     query = """
         SELECT carparkno, carparktype, address, latitude, longitude,
                 totallots, lotsavailable, lotstype, recordeddatetime
-        FROM (
-            SELECT i.carparkno, i.carparktype, i.address, i.latitude, i.longitude,
-                a.totallots, a.lotsavailable, a.lotstype, a.recordeddatetime,
-                RANK() OVER (PARTITION BY a.carparkno ORDER BY a.recordeddatetime DESC) AS rn
-            FROM tbl_carpark_info_data i
-            JOIN tbl_carpark_avail_data a ON i.carparkno = a.carparkno
-            WHERE i.latitude IS NOT NULL AND i.longitude IS NOT NULL AND a.lotstype = 'C' AND i.carparktype = 'MULTI-STOREY CAR PARK'
-        ) WHERE rn = 1
+        FROM tbl_carpark_aggregated
+        WHERE CAST(lotsavailable as INTEGER) > 0
     """
+
     cur.execute(query)
     rows = cur.fetchall()
     cur.close()
     conn.close()
 
     if not rows:
-        return {"message": "No carpark data available."}
+        return {"message": "No available carpark found."}
 
     carparks = [
         {
