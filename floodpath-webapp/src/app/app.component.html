@@ -65,6 +65,15 @@
     </div>
 </div>
 
+<div class="promptBox" [class.showPrompt]="promptDetails !== null && promptDetails?.length > 0">
+    <button class="close-button" (click)="dismissPrompt()">✖</button>
+    <ol>
+    <ng-container *ngFor="let det of promptDetails">
+          <li>{{ det }}</li>
+    </ng-container>
+    </ol>
+</div>
+
 <!-- Snackbar -->
 <div class="snackbar" [class.show]="snackbarVisible">{{ snackbarMessage }}</div>
 

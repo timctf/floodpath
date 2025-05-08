@@ -177,3 +177,24 @@ div.map {
   overflow-y: auto;
 }
 /* ROUTEBOX END HERE */
+
+/* PROMPTBOX START HERE */
+.promptBox {
+  position: absolute;
+  z-index: 1000;
+  top: 4rem;
+  left: 20px;
+  padding: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  gap: 4px;
+  display: none;
+  opacity: 1;
+  background: lightcoral;
+}
+
+.showPrompt {
+  display: block;
+}
+/* PROMPTBOX END HERE */
+
+

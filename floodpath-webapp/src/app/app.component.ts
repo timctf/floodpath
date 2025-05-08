@@ -45,6 +45,8 @@ export class AppComponent implements OnInit, OnDestroy  {
   routeVisible = false; // tracks if route should be shown
   routeDetails: OneMapRouteResponse = null;
   
+  promptDetails: string[] = [];
+
   myRainArea: L.Circle | null = null;
 
   dropMode: boolean = false; // tracks if user is in "drop mode"
@@ -156,6 +158,7 @@ export class AppComponent implements OnInit, OnDestroy  {
 
     this.loadRainAreaData(lat, lng);
 
+    this.calculateInfo(lat, lng);
   }
 
   displayRoute(): void {
@@ -412,6 +415,42 @@ export class AppComponent implements OnInit, OnDestroy  {
     );
   }
 
+  dismissPrompt(): void {
+    this.promptDetails = [];
+  }
+
+  calculateInfo(lat: number, lng: number) {
+    this.promptDetails = [];
+    console.log(lat, lng);
+    if(lat && lng) {
+      let inFloodProneZone: boolean = this.isPointInFloodProneZone(lat, lng, 0.2);
+      let inFloodZone: boolean = this.isPointInFloodZone(lat, lng, 0.5);
+      let inRainZone: boolean = this.isPointInRainZone(lat, lng, 2);
+
+      console.log("inFloodProneZone: "+ inFloodProneZone);
+      console.log("inFloodZone: "+ inFloodZone);
+      console.log("inRainZone: "+ inRainZone);
+
+      if(inFloodZone) {
+        this.promptDetails.push('You are currently in a flooded area. ');
+        this.promptDetails.push('Please follow the directions to get to a multi story carpark immediately. ');
+      } else if(inFloodProneZone && inRainZone) {
+        this.promptDetails.push('You are currently in a flood prone area and it is raining.');
+        this.promptDetails.push('It is highly recommended to relocate your vehicle to the nearest multi story carpark. ');
+      } else if(inFloodProneZone && ! inRainZone) {
+        this.promptDetails.push('You are currently in a flood prone area, the weather seems good for now. ');
+        this.promptDetails.push('Please monitor the weather conditions.  ');
+        this.promptDetails.push('Feel free to follow the instructions if required. ');
+      } else if(inRainZone) {
+        this.promptDetails.push('Rainfall detected in your area. ');
+        this.promptDetails.push('Feel free to follow the instructions if required. ');
+      } else {
+        this.promptDetails.push('You are not located in a flood risk zone and the weather seems great. ');
+      }
+      
+    }
+  }
+
   locateUser(): void {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -550,7 +589,7 @@ export class AppComponent implements OnInit, OnDestroy  {
 
   plotRainAreaData(): void {
     console.log('plotRainAreaData1');
-    if (this.rainAreas && this.rainAreas.rainfall.length > 0) {
+    if (this.rainAreas && this.rainAreas.rainfall?.length > 0) {
       console.log('plotRainAreaData2');
       this.rainAreas.rainfall.forEach(rainArea => {
         this.drawMyAreaRainfallRadius(rainArea.latitude, rainArea.longitude, 2, 0.2, 'none', 'blue', rainArea.label);
@@ -563,7 +602,7 @@ export class AppComponent implements OnInit, OnDestroy  {
     if (this.islandWideRainAreas && this.islandWideRainAreas.rainfall.length > 0) {
       console.log('plotIslandRainAreaData');
       this.islandWideRainAreas.rainfall.forEach(rainArea => {
-        this.drawRainfallRadius(rainArea.latitude, rainArea.longitude, 2, 0.2, 'none', '#4eaeff', rainArea.label);
+        this.drawRainfallRadius(rainArea.latitude, rainArea.longitude, 2, 0.2, 'none', '#4eaeff', rainArea.stationid+': '+rainArea.label);
       });
     }
   }
@@ -656,6 +695,48 @@ export class AppComponent implements OnInit, OnDestroy  {
   hideSnackbar(): void {
     this.snackbarVisible = false;
   }
+
+  getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Radius of the earth in km
+    const dLat = this.deg2rad(lat2 - lat1);
+    const dLon = this.deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+  }
+  
+  deg2rad(deg: number): number {
+    return deg * (Math.PI / 180);
+  }
+
+  isPointInFloodProneZone(lat: number, lng: number, radiusKm: number): boolean {
+    return this.floodProneAreas.some(area => {
+      const distance = this.getDistanceFromLatLonInKm(lat, lng, area.latitude, area.longitude);
+      return distance <= radiusKm;
+    });
+  }
+
+  isPointInFloodZone(lat: number, lng: number, radiusKm: number): boolean {
+    return this.floodAreas.some(area => {
+      const distance = this.getDistanceFromLatLonInKm(lat, lng, area.latitude, area.longitude);
+      return distance <= radiusKm;
+    });
+  }
+
+  isPointInRainZone(lat: number, lng: number, radiusKm: number): boolean {
+    if (this.islandWideRainAreas && this.islandWideRainAreas.rainfall?.length === 0) {
+      return false;
+    }
+    return this.islandWideRainAreas.rainfall.some(rainfall => {
+      const distance = this.getDistanceFromLatLonInKm(lat, lng, rainfall.latitude, rainfall.longitude);
+      return distance <= radiusKm;
+    });
+  }
+
+  
 
   //NOTE
   //lat lng conversion, interim, for backend give me x y converted to lat lng
