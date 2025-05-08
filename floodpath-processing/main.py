@@ -195,46 +195,7 @@ def get_flood_areas(
         "results": results
     }
 
-@app.get("/rainfall")
-def get_rainfall(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
-    station: Optional[str] = Query(None, description="Optional filter by station ID")
-):
-    offset = (page - 1) * page_size
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor()
 
-    if station:
-        query = """
-            SELECT stationid, latitude, longitude, recordeddatetime, value
-            FROM tbl_rainfall_data
-            WHERE stationid = %s
-            ORDER BY recordeddatetime DESC
-            LIMIT %s OFFSET %s
-        """
-        cur.execute(query, (station, page_size, offset))
-    else:
-        query = """
-            SELECT stationid, latitude, longitude, recordeddatetime, value
-            FROM tbl_rainfall_data
-            ORDER BY recordeddatetime DESC
-            LIMIT %s OFFSET %s
-        """
-        cur.execute(query, (page_size, offset))
-
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    results = cleanse_rainfall_data(rows)
-
-    return {
-        "page": page,
-        "page_size": page_size,
-        "station": station,
-        "results": results
-    }
 
 def haversine(lat1, lon1, lat2, lon2):
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
