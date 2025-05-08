@@ -326,15 +326,20 @@ def get_rainfall_nearby(
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
+    # query = """
+    #     SELECT stationid, latitude, longitude, recordeddatetime, value
+    #     FROM (
+    #         SELECT i.stationid, i.latitude, i.longitude, i.recordeddatetime, i.value,
+    #             RANK() OVER (PARTITION BY i.stationid ORDER BY i.recordeddatetime DESC) AS rn
+    #         FROM tbl_rainfall_data i
+    #         WHERE latitude IS NOT NULL AND longitude IS NOT NULL 
+    #     ) WHERE rn = 1
+    #     AND value > 0
+    # """
+
     query = """
         SELECT stationid, latitude, longitude, recordeddatetime, value
-        FROM (
-            SELECT i.stationid, i.latitude, i.longitude, i.recordeddatetime, i.value,
-                RANK() OVER (PARTITION BY i.stationid ORDER BY i.recordeddatetime DESC) AS rn
-            FROM tbl_rainfall_data i
-            WHERE latitude IS NOT NULL AND longitude IS NOT NULL 
-        ) WHERE rn = 1
-        AND value > 0
+        FROM tbl_rainfall_aggregated
     """
 
     cur.execute(query)
@@ -377,15 +382,20 @@ def get_rainfall_islandwide():
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
+    # query = """
+    #     SELECT stationid, latitude, longitude, recordeddatetime, value
+    #     FROM (
+    #         SELECT i.stationid, i.latitude, i.longitude, i.recordeddatetime, i.value,
+    #             RANK() OVER (PARTITION BY i.stationid ORDER BY i.recordeddatetime DESC) AS rn
+    #         FROM tbl_rainfall_data i
+    #         WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+    #     ) WHERE rn = 1
+    #     AND value > 0
+    # """
+
     query = """
         SELECT stationid, latitude, longitude, recordeddatetime, value
-        FROM (
-            SELECT i.stationid, i.latitude, i.longitude, i.recordeddatetime, i.value,
-                RANK() OVER (PARTITION BY i.stationid ORDER BY i.recordeddatetime DESC) AS rn
-            FROM tbl_rainfall_data i
-            WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-        ) WHERE rn = 1
-        AND value > 0
+        FROM tbl_rainfall_aggregated
     """
 
     cur.execute(query)
