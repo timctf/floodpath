@@ -543,7 +543,7 @@ export class AppComponent implements OnInit, OnDestroy  {
     //     this.drawRadius(floodArea.latitude, floodArea.longitude, 0.5, 0.3, 'red', 'red', floodArea.label);
     //   });
     // }
-    if(floodArea) {
+    if(floodArea && floodArea.latitude && floodArea.longitude) {
       this.drawRadius(floodArea.latitude, floodArea.longitude, 0.5, 0.3, 'red', 'red', 'Flood detected @ ' + floodArea.label);
     }
   }
