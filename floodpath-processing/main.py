@@ -332,7 +332,7 @@ def get_rainfall_nearby(
             SELECT i.stationid, i.latitude, i.longitude, i.recordeddatetime, i.value,
                 RANK() OVER (PARTITION BY i.stationid ORDER BY i.recordeddatetime DESC) AS rn
             FROM tbl_rainfall_data i
-            WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND value > 0
+            WHERE latitude IS NOT NULL AND longitude IS NOT NULL
         ) WHERE rn = 1
     """
 

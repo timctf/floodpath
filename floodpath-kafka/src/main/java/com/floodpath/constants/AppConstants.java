@@ -18,5 +18,5 @@ public class AppConstants {
     public static final String ZONE_ID = "Asia/Singapore";
 
     public static final boolean MOCK_DATA = true;
-    public static final List<String> MOCK_DATA_STATION_ID = List.of("S77");
+    public static final List<String> MOCK_DATA_STATION_ID = List.of("S77", "S84", "S209");
 }
