@@ -71,6 +71,7 @@
 - floodpath-kafka -> ingestion layer (kafka producer and consumer)
 - floodpath-processing -> processing layer (telegram bot, pyspark scheduled jobs, backend API service)
 - floodpath-webapp -> visualization layer (frontend client)
+- sql -> data store sql scripts
 
 ## ✨ Contact
 - Chan Ting Feng Tim (NCS) - tim.chan@ncs.com.sg
