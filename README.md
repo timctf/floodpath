@@ -27,7 +27,7 @@ Build and run commands:
 - start kafka and leave it running -> refer to floodpath-kafka/kafka_broker_tostart.txt
 - start kafka producer and consumers and leave it running
     - open up floodpath-kafka folder as a project in intellij
-    - update configuration (with postgres db credentials, etc)
+    - update configuration (with postgres db credentials, etc) at src/main/resources/application.properties
     - start debugging (com.floodpath.FloodPathKafkaApplication as the main class of the app)
 - update scheduler service postgres db credentials/config (floodpath-processing/scheduler.py, line 12-19)
 - start scheduler service (for scheduled spark jobs) and leave it running -> floodpath-processing/run_scheduler.bat
