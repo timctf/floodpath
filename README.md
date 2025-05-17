@@ -28,9 +28,7 @@
     - pip install fastapi
     - pip install pydantic
     - pip install requests
-- Angular
 - Node.js
-    - run 'npm install' in terminal/cmd at floodpath-webapp (to install frontend libraries)
 - OneMap - API Token 
 	- registration url: https://www.onemap.gov.sg/apidocs/register
 	- replace the token "<YOUR_ONE_MAP_TOKEN>" in the following files:
@@ -62,6 +60,7 @@
 	- start backend querying service and leave it running -> floodpath-processing/run_app.bat
 
 #### Angular
+	- run 'npm install' in terminal/cmd at floodpath-webapp (to install frontend libraries)
 	- start frontend client -> floodpath-webapp/run_webapp.bat
 
 ## 🔨 Usage
