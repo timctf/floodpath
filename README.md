@@ -69,7 +69,7 @@
 
 ## 🖥 Directory Structure
 - floodpath-kafka -> ingestion layer (kafka producer and consumer)
-- floodpath-kafka -> processing layer (telegram bot, pyspark scheduled jobs, backend API service)
+- floodpath-processing -> processing layer (telegram bot, pyspark scheduled jobs, backend API service)
 - floodpath-webapp -> visualization layer (frontend client)
 
 ## ✨ Contact
