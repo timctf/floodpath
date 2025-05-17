@@ -34,9 +34,9 @@
 - OneMap - API Token 
 	- registration url: https://www.onemap.gov.sg/apidocs/register
 	- replace the token "<YOUR_ONE_MAP_TOKEN>" in the following files:
-		a. floodpath-processing\main.py -> line:454 
-		b. floodpath-webapp\src\app\app.component.ts -> line:19
-		c. floodpath-kafka\src\main\java\com\floodpath\util\ConvertUtil.java -> line:14	
+		1. floodpath-processing\main.py -> line:454 
+		2. floodpath-webapp\src\app\app.component.ts -> line:19
+		3. floodpath-kafka\src\main\java\com\floodpath\util\ConvertUtil.java -> line:14	
 
 ### 📦 Build and run commands:
 #### Database
