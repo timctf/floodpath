@@ -7,10 +7,10 @@
 
 ## 📝 Table of Contents
 
--- 🚀 Getting Started
--- 🔨 Usage
--- 🖥 Directory Structure
--- ✨ Contact
+- [🚀 Getting Started]
+- [🔨 Usage]
+- [🖥 Directory Structure]
+- [✨ Contact]
 
 ## 🚀 Getting Started
 ### Prerequisites
