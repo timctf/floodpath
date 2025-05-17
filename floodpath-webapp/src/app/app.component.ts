@@ -16,7 +16,7 @@ export class AppComponent implements OnInit, OnDestroy  {
   
   @ViewChild('promptBoxMarker') promptBoxMarker!: ElementRef;
 
-  private token: string | null = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzOGQ1OTk1MzkzZTg0NWQ4NTcwMzI0MzIzNGMxZGQ1OSIsImlzcyI6Imh0dHA6Ly9pbnRlcm5hbC1hbGItb20tcHJkZXppdC1pdC1uZXctMTYzMzc5OTU0Mi5hcC1zb3V0aGVhc3QtMS5lbGIuYW1hem9uYXdzLmNvbS9hcGkvdjIvdXNlci9wYXNzd29yZCIsImlhdCI6MTc0NzQ2MDgzNSwiZXhwIjoxNzQ3NzIwMDM1LCJuYmYiOjE3NDc0NjA4MzUsImp0aSI6IkNuSTY4Uk9DREk0d0p0ZEUiLCJ1c2VyX2lkIjo2OTA1LCJmb3JldmVyIjpmYWxzZX0.H3nWZHxELqC_09mxm1DKH_QQeAy8bMB86JIW6uA0U0Q';
+  private token: string | null = '<YOUR_ONE_MAP_TOKEN>';
 
   private pollSub: Subscription;
   private pollLocation: Subscription;
