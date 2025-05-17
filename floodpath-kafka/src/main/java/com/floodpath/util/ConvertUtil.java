@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class ConvertUtil {
     private final String CONVERT_URL = "https://www.onemap.gov.sg/api/common/convert/3414to4326?X={x}&Y={y}";
-    private final String TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzOGQ1OTk1MzkzZTg0NWQ4NTcwMzI0MzIzNGMxZGQ1OSIsImlzcyI6Imh0dHA6Ly9pbnRlcm5hbC1hbGItb20tcHJkZXppdC1pdC1uZXctMTYzMzc5OTU0Mi5hcC1zb3V0aGVhc3QtMS5lbGIuYW1hem9uYXdzLmNvbS9hcGkvdjIvdXNlci9wYXNzd29yZCIsImlhdCI6MTc0NjYyNzYxMSwiZXhwIjoxNzQ2ODg2ODExLCJuYmYiOjE3NDY2Mjc2MTEsImp0aSI6Im1XZ0k4YzVTcG9Od3BTeWMiLCJ1c2VyX2lkIjo2OTA1LCJmb3JldmVyIjpmYWxzZX0.yYmMHx_wf_ZdIaRoiORLwQQ3CeWyJUOGNTToO7hVj_g";
+    private final String TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzOGQ1OTk1MzkzZTg0NWQ4NTcwMzI0MzIzNGMxZGQ1OSIsImlzcyI6Imh0dHA6Ly9pbnRlcm5hbC1hbGItb20tcHJkZXppdC1pdC1uZXctMTYzMzc5OTU0Mi5hcC1zb3V0aGVhc3QtMS5lbGIuYW1hem9uYXdzLmNvbS9hcGkvdjIvdXNlci9wYXNzd29yZCIsImlhdCI6MTc0NzQ2MDgzNSwiZXhwIjoxNzQ3NzIwMDM1LCJuYmYiOjE3NDc0NjA4MzUsImp0aSI6IkNuSTY4Uk9DREk0d0p0ZEUiLCJ1c2VyX2lkIjo2OTA1LCJmb3JldmVyIjpmYWxzZX0.H3nWZHxELqC_09mxm1DKH_QQeAy8bMB86JIW6uA0U0Q";
 
     public LatLongDTO convertXYToLatLong(String x, String y) throws InterruptedException {
         Thread.sleep(1000); // prevent 429 TOO MANY REQUESTS
